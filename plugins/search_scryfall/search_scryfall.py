@@ -1,17 +1,14 @@
 #!/usr/bin/python
-from gimpfu import *
-import sys
+from gimpfu import register, main, PF_STRING
+
 #this append to the syspath really really sucks but since these scripts run from gimp there is little i can do i think
+import sys
 sys.path.append('C:\Users\Robin\Documents\\repos\gimpfall')
-from scryfall_lib.query_scryfall import query_scryfall
+from scryfall_utils.query_scryfall import query_scryfall
+from gimp_utils.gimp import import_into_gimp
 
 def search_scryfall(query='sol ring'):
-	image_path = query_scryfall(query)
-	image = pdb.file_png_load(image_path, image_path)
-	pdb.gimp_display_new(image)
-	return image
-	#TODO delete temp file
-
+	import_into_gimp(query_scryfall(query))
 
 register(
 	"search_scryfall",

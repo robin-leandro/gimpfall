@@ -19,9 +19,8 @@ def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19):
 		card_images.append(image)
 	arrange_cards_into_sheets(card_images, card_names, sheet_width_in*PPI, sheet_height_in*PPI)
 	delete_images(card_images)
-	#TODO locally cache downloaded cards
 	#TODO different plugin that loads list of cards from a local directory instead of scryfall
-	#TODO open-ended "roll" mode
+	#TODO open-ended "paper roll" mode
 
 
 register(		

@@ -1,12 +1,11 @@
 #!/usr/bin/python
-#TODO fix import
-from gimpfu import *#register, main, PF_FLOAT, PF_FILE
+from gimpfu import gimp, register, main, PF_FLOAT, PF_FILE
 
 import sys, os
 plugin_path = os.path.abspath(sys.argv[0])
 module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
 # not ideal to append to syspath like this
-# but since gimp runs its own python instace its required fo modules to work
+# but since gimp runs its own python instance its required for modules to work
 sys.path.append(module_path)
 from gimp_utils.gimp import arrange_cards_into_sheets, import_into_gimp, page_setup, PPI
 

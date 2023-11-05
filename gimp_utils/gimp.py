@@ -32,12 +32,13 @@ def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT):
 	pdb.gimp_image_scale(image, temp_width, temp_height)
 	pdb['gimp-image-crop'](image, target_width, target_height, (temp_width-target_width)/2, (temp_height-target_height)/2)
 
-def page_setup(sheet_width_px, sheet_height_px) -> tuple[int,int,int,int,int]:
-	cards_per_row = math.floor(sheet_width_px / CARD_WIDTH)
-	cards_per_column = math.floor(sheet_height_px / CARD_HEIGHT)
+def page_setup(sheet_width_px, sheet_height_px):
+	# ugly casts go brrrr but against docs somehow math.floor is not returning ints here
+	cards_per_row = int(math.floor(sheet_width_px / CARD_WIDTH))
+	cards_per_column = int(math.floor(sheet_height_px / CARD_HEIGHT))
 	cards_per_sheet = cards_per_row * cards_per_column
-	horizontal_margin = (sheet_width_px - cards_per_row * CARD_WIDTH) / 2
-	vertical_margin = (sheet_height_px - cards_per_column * CARD_HEIGHT) / 2
+	horizontal_margin = int((sheet_width_px - cards_per_row * CARD_WIDTH) / 2)
+	vertical_margin = int((sheet_height_px - cards_per_column * CARD_HEIGHT) / 2)
 	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
 
 def arrange_cards_into_sheets(card_images, card_names, sheet_width_px, sheet_height_px):
@@ -69,11 +70,16 @@ def arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_heig
 		pdb.gimp_edit_copy(card_image.active_layer)
 		selection = pdb.gimp_edit_paste(card_layer, True)
 		pdb.gimp_floating_sel_anchor(selection)
-		pdb.gimp_image_delete(card_image)
-
+	
 	background_layer = pdb.gimp_layer_new(image, sheet_width_px, sheet_height_px, RGB_IMAGE, 'background', 100, NORMAL_MODE)
 	image.add_layer(background_layer, len(image.layers))
 	background_layer.fill(FILL_WHITE)
-
 	pdb.gimp_display_new(image)
 	
+# handles copies of the same image, blindly deleting them would throw GIMP errors
+def delete_images(images):
+	images_dict = {}
+	for image in images:
+		images_dict[image.ID] = image
+	for image in images_dict.itervalues():
+		gimp.delete(image)

@@ -13,12 +13,11 @@ from gimp_utils.gimp import import_into_gimp
 os.chdir(plugin_path.rpartition('\\')[0])
 
 def search_scryfall(query='sol ring'):
-	a = 1
-	#import_into_gimp(query_scryfall(query))
+	import_into_gimp(query_scryfall(query))
 
 register(
 	"search_scryfall",
-	"Fetch",
+	"Fetch card From Scryfall",
 	"Query Scryfall for a card name, download the png file and open it as a new image",
 	"Robin Leandro",
 	"Robin Leandro",

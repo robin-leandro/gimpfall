@@ -8,7 +8,7 @@ module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
 # but since gimp runs its own python instace its required for modules to work
 sys.path.append(module_path)
 from scryfall_utils.query_scryfall import query_scryfall
-from gimp_utils.gimp import crop_scale, import_into_gimp, arrange_cards_into_sheets, PPI
+from gimp_utils.gimp import crop_scale, import_into_gimp, arrange_cards_into_sheets, delete_images, PPI
 
 os.chdir(plugin_path.rpartition('\\')[0])
 
@@ -20,10 +20,10 @@ def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19):
 		crop_scale(image)
 		card_images.append(image)
 	arrange_cards_into_sheets(card_images, card_names, sheet_width_in*PPI, sheet_height_in*PPI)
+	delete_images(card_images)
 	#TODO locally cache downloaded cards
 	#TODO different plugin that loads list of cards from a local directory instead of scryfall
-	#TODO open-ended "roll" mode?
-	#TODO CARDBACKS? CARDBACKS? CARDBACKS? CARDBACKS? CARDBACKS?
+	#TODO open-ended "roll" mode
 
 
 register(		

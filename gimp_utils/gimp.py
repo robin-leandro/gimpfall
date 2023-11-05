@@ -2,6 +2,7 @@ from gimpfu import *
 import math
 CARD_WIDTH = 744
 CARD_HEIGHT = 1038
+PPI = 300
 
 def import_into_gimp(path, display=True):
 	image = pdb.file_png_load(path, path)
@@ -31,17 +32,20 @@ def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT):
 	pdb.gimp_image_scale(image, temp_width, temp_height)
 	pdb['gimp-image-crop'](image, target_width, target_height, (temp_width-target_width)/2, (temp_height-target_height)/2)
 
+def page_setup(sheet_width_px, sheet_height_px) -> tuple[int,int,int,int,int]:
+	cards_per_row = math.floor(sheet_width_px / CARD_WIDTH)
+	cards_per_column = math.floor(sheet_height_px / CARD_HEIGHT)
+	cards_per_sheet = cards_per_row * cards_per_column
+	horizontal_margin = (sheet_width_px - cards_per_row * CARD_WIDTH) / 2
+	vertical_margin = (sheet_height_px - cards_per_column * CARD_HEIGHT) / 2
+	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
+
 def arrange_cards_into_sheets(card_images, card_names, sheet_width_px, sheet_height_px):
 	if CARD_WIDTH > sheet_width_px or CARD_HEIGHT > sheet_height_px:
 		raise NameError('sheet with provided dimensions cannot fit any cards')
 
-	# ugly casts go brrrr
-	cards_per_row = int(math.floor(sheet_width_px / CARD_WIDTH))
-	cards_per_column = int(math.floor(sheet_height_px / CARD_HEIGHT))
-	cards_per_sheet = cards_per_row * cards_per_column
+	cards_per_row, _, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px)
 	total_sheets = int(math.ceil(float(len(card_images))/float(cards_per_sheet)))
-	horizontal_margin = int((sheet_width_px - cards_per_row * CARD_WIDTH) / 2)
-	vertical_margin = int((sheet_height_px - cards_per_column * CARD_HEIGHT) / 2)
 	#just a cheeky lil debugging message keep moving along folks
 	#pdb.gimp_message("cards per row {cpr}\ncards per col {cpc}\ncards per sheet {cps}\ntotal sheets {tSheet}\nhorizontal margin {hm}\nvertical margin {vm}".format(cpr=cards_per_row,cpc = cards_per_column, cps =cards_per_sheet, tSheet = total_sheets, hm=horizontal_margin, vm=vertical_margin))
 

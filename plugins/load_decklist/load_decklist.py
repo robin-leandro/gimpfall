@@ -8,10 +8,9 @@ module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
 # but since gimp runs its own python instace its required for modules to work
 sys.path.append(module_path)
 from scryfall_utils.query_scryfall import query_scryfall
-from gimp_utils.gimp import crop_scale, import_into_gimp, arrange_cards_into_sheets
+from gimp_utils.gimp import crop_scale, import_into_gimp, arrange_cards_into_sheets, PPI
 
 os.chdir(plugin_path.rpartition('\\')[0])
-PPI = 300
 
 def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19):
 	card_names = decklist.split('\n')

@@ -13,7 +13,8 @@ from gimp_utils.gimp import import_into_gimp
 os.chdir(plugin_path.rpartition('\\')[0])
 
 def search_scryfall(query='sol ring'):
-	import_into_gimp(query_scryfall(query))
+	a = 1
+	#import_into_gimp(query_scryfall(query))
 
 register(
 	"search_scryfall",

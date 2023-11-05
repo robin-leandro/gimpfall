@@ -79,8 +79,6 @@ def arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_heig
 	
 # handles copies of the same image, blindly deleting them would throw GIMP errors
 def delete_images(images):
-	images_dict = {}
 	for image in images:
-		images_dict[image.ID] = image
-	for image in images_dict.itervalues():
-		gimp.delete(image)
+		if pdb.gimp_image_is_valid(image):
+			gimp.delete(image)

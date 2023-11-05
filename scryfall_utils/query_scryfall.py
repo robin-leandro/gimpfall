@@ -1,8 +1,11 @@
 import requests
-import os
+import os, sys
 
 SCRYFALL_URL = 'https://api.scryfall.com'
 SEARCH_ENDPOINT = '/cards/search'
+
+plugin_path = os.path.abspath(sys.argv[0])
+os.chdir(plugin_path.rpartition('\\')[0])
 
 def query_scryfall(query='sol ring'):
 	params = {

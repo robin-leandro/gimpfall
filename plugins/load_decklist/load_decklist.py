@@ -1,11 +1,16 @@
 #!/usr/bin/python
 from gimpfu import register, main, PF_STRING, PF_FLOAT
-from sys import path
-#this append to the syspath really really sucks but since these scripts run from gimp and this isnt the cwd on runtime there is little i can do i think
-path.append('C:\Users\Robin\Documents\\repos\gimpfall')
+
+import sys, os
+plugin_path = os.path.abspath(sys.argv[0])
+module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
+# not ideal to append to syspath like this
+# but since gimp runs its own python instace its required for modules to work
+sys.path.append(module_path)
 from scryfall_utils.query_scryfall import query_scryfall
 from gimp_utils.gimp import crop_scale, import_into_gimp, arrange_cards_into_sheets
 
+os.chdir(plugin_path.rpartition('\\')[0])
 PPI = 300
 
 def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19):

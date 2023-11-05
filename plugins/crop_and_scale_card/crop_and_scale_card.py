@@ -1,9 +1,12 @@
 #!/usr/bin/python
 from gimpfu import register, main, PF_INT
-#this append to the syspath really really sucks but since these scripts run from gimp there is little i can do i think
-from sys import path
-#this append to the syspath really really sucks but since these scripts run from gimp and this isnt the cwd on runtime there is little i can do i think
-path.append('C:\Users\Robin\Documents\\repos\gimpfall')
+
+import sys, os
+plugin_path = os.path.abspath(sys.argv[0])
+module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
+# not ideal to append to syspath like this
+# but since gimp runs its own python instace its required fo modules to work
+sys.path.append(module_path)
 from gimp_utils.gimp import crop_scale
 
 

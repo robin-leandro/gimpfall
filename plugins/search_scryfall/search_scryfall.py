@@ -17,7 +17,7 @@ def search_scryfall(query='sol ring'):
 
 register(
 	"search_scryfall",
-	"Fetch",
+	"Fetch card From Scryfall",
 	"Query Scryfall for a card name, download the png file and open it as a new image",
 	"Robin Leandro",
 	"Robin Leandro",

@@ -33,7 +33,8 @@ def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT):
 	pdb['gimp-image-crop'](image, target_width, target_height, (temp_width-target_width)/2, (temp_height-target_height)/2)
 
 def page_setup(sheet_width_px, sheet_height_px):
-	# ugly casts go brrrr but against docs somehow math.floor is not returning ints here
+	# according to docs math.floor is supposed to return int
+	# but its not doing that so ugly casts it is ig
 	cards_per_row = int(math.floor(sheet_width_px / CARD_WIDTH))
 	cards_per_column = int(math.floor(sheet_height_px / CARD_HEIGHT))
 	cards_per_sheet = cards_per_row * cards_per_column

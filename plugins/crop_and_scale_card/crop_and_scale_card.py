@@ -18,7 +18,7 @@ register(
 	"Robin Leandro",
 	"Robin Leandro",
 	"2023",
-	"<Image>/gimpfall/Crop Scale",
+	"<Image>/gimpfall/Crop & Scale",
 	"RGB*, GRAY*",
 	[
 		(PF_INT, "width", "width", 744),

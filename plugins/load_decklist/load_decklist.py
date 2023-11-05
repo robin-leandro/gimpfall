@@ -24,12 +24,12 @@ def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19):
 
 register(		
 	"load_decklist",
-	"Load Decklist",
+	"Load Decklist From Scryfall",
 	"Loads a list of cards from Scyfall, arranging them into a sheet with the specified dimensions at 300ppi.",
 	"Robin Leandro",
 	"Robin Leandro",
 	"2023",
-	"<Toolbox>/gimpfall/Load Decklist",
+	"<Toolbox>/gimpfall/Load Decklist From Scryfall",
 	"",
 	[
 		(PF_STRING, "decklist", "newline-separated list of cards to load", 'mudbutton torchrunner\ngoblin grenade'),

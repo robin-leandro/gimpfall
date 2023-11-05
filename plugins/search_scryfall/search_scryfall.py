@@ -10,8 +10,6 @@ sys.path.append(module_path)
 from scryfall_utils.query_scryfall import query_scryfall
 from gimp_utils.gimp import import_into_gimp
 
-os.chdir(plugin_path.rpartition('\\')[0])
-
 def search_scryfall(query='sol ring'):
 	import_into_gimp(query_scryfall(query))
 

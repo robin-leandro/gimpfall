@@ -21,7 +21,7 @@ def query_scryfall(query='sol ring'):
 	response_json = search_request.json()['data'][0]
 
 	# check if image is cached
-	filename = "{id}.png".format(id=response_json['id'])
+	filename = "{name}_{id}.png".format(name = response_json['name'].encode('ascii', 'ignore').lower().replace(' ', '_'), id = response_json['id'])
 	if os.path.isfile(filename):
 		return card_directory+'\\'+filename
 

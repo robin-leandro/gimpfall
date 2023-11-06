@@ -10,12 +10,11 @@ def import_into_gimp(path, display=True):
 		pdb.gimp_display_new(image)
 	return image
 
-
 def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT):
 	initial_width = image.width
 	initial_height = image.height
 
-	if (initial_width < target_width or initial_height < target_height):
+	if initial_width < target_width or initial_height < target_height:
 		pdb.gimp_message('Image is already smaller than targets')
 		return
 
@@ -24,13 +23,14 @@ def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT):
 
 	#TODO make sure this algorithm is correct
 	# maybe i need to normalize by dividing by target_x ?
-	if ( temp_width-target_width > temp_height-target_height ): 
+	if temp_width-target_width > temp_height-target_height: 
 		temp_height = target_height
 	else:
 		temp_width = target_width
 
 	pdb.gimp_image_scale(image, temp_width, temp_height)
 	pdb['gimp-image-crop'](image, target_width, target_height, (temp_width-target_width)/2, (temp_height-target_height)/2)
+	return image
 
 def page_setup(sheet_width_px, sheet_height_px):
 	# according to docs math.floor is supposed to return int
@@ -42,10 +42,17 @@ def page_setup(sheet_width_px, sheet_height_px):
 	vertical_margin = int((sheet_height_px - cards_per_column * CARD_HEIGHT) / 2)
 	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
 
-def arrange_cards_into_sheets(card_images, card_names, sheet_width_px, sheet_height_px):
+def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px):
 	if CARD_WIDTH > sheet_width_px or CARD_HEIGHT > sheet_height_px:
 		raise NameError('sheet with provided dimensions cannot fit any cards')
 
+	# dont wanna be double importing duplicates
+	paths_dict = {}
+	def image_from_path(p):
+		if p in paths_dict:
+			return paths_dict[p]
+		return paths_dict.setdefault(p, crop_scale(import_into_gimp(p, False)))
+	card_images = map(image_from_path, card_paths)
 	cards_per_row, _, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px)
 	total_sheets = int(math.ceil(float(len(card_images))/float(cards_per_sheet)))
 	#just a cheeky lil debugging message keep moving along folks
@@ -59,6 +66,8 @@ def arrange_cards_into_sheets(card_images, card_names, sheet_width_px, sheet_hei
 		cards_per_row,
 		horizontal_margin,
 		vertical_margin)
+
+	__delete_images(card_images)
 
 # assumes sheet is large enough to fit the passed cards
 def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_height_px, cards_per_row, horizontal_margin, vertical_margin):
@@ -78,7 +87,7 @@ def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_he
 	pdb.gimp_display_new(image)
 	
 # handles copies of the same image, blindly deleting them would throw GIMP errors
-def delete_images(images):
+def __delete_images(images):
 	for image in images:
 		if pdb.gimp_image_is_valid(image):
 			gimp.delete(image)

@@ -8,21 +8,19 @@ module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
 # but since gimp runs its own python instace its required for modules to work
 sys.path.append(module_path)
 from scryfall_utils.query_scryfall import query_scryfall
-from gimp_utils.gimp import crop_scale, import_into_gimp, arrange_cards_into_sheets, delete_images, PPI
+from gimp_utils.gimp import arrange_cards_into_sheets, PPI
 
 def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19):
 	decklist = decklist.split('\n')
-	card_images = []
+	card_paths = []
 	card_names = []
 	for line in decklist:
 		amount, _, card = line.partition(' ')
-		image = import_into_gimp(query_scryfall(card), False)
-		crop_scale(image)
+		path = query_scryfall(card)
 		for _ in range(int(amount)):
-			card_images.append(image)
+			card_paths.append(path)
 			card_names.append(card)
-	arrange_cards_into_sheets(card_images, card_names, sheet_width_in*PPI, sheet_height_in*PPI)
-	delete_images(card_images)
+	arrange_cards_into_sheets(card_paths, card_names, sheet_width_in*PPI, sheet_height_in*PPI)
 	#TODO different plugin that loads list of cards from a local directory instead of scryfall
 	#TODO open-ended "paper roll" mode
 	#TODO sick ass progress bar

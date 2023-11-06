@@ -16,15 +16,12 @@ def load_cardback(file_name=default_cardback, sheet_width_in=19, sheet_height_in
 	sheet_height_px = sheet_height_in*PPI
 	_, _, cards_per_sheet, _, _ = page_setup(sheet_width_px, sheet_height_px)
 
-	image = import_into_gimp(file_name, False)
-	cardbacks = []
-	card_names = []
+	paths = []
+	names = []
 	for i in range(cards_per_sheet):
-		cardbacks.append(image)
-		card_names.append('cardback')
-	arrange_cards_into_sheets(cardbacks, card_names, sheet_width_px, sheet_height_px)
-	gimp.delete(image)
-	
+		paths.append(file_name)
+		names.append('cardback')
+	arrange_cards_into_sheets(paths, names, sheet_width_px, sheet_height_px)
 	
 register(		
 	"load_cardback",

@@ -52,7 +52,7 @@ def arrange_cards_into_sheets(card_images, card_names, sheet_width_px, sheet_hei
 	#pdb.gimp_message("cards per row {cpr}\ncards per col {cpc}\ncards per sheet {cps}\ntotal sheets {tSheet}\nhorizontal margin {hm}\nvertical margin {vm}".format(cpr=cards_per_row,cpc = cards_per_column, cps =cards_per_sheet, tSheet = total_sheets, hm=horizontal_margin, vm=vertical_margin))
 
 	for i in range(total_sheets):
-		arrange_cards_into_sheet(card_images[i*cards_per_sheet:(i+1)*cards_per_sheet], 
+		__arrange_cards_into_sheet(card_images[i*cards_per_sheet:(i+1)*cards_per_sheet], 
 		card_names[i*cards_per_sheet:(i+1)*cards_per_sheet],
 		sheet_width_px,
 		sheet_height_px,
@@ -61,7 +61,7 @@ def arrange_cards_into_sheets(card_images, card_names, sheet_width_px, sheet_hei
 		vertical_margin)
 
 # assumes sheet is large enough to fit the passed cards
-def arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_height_px, cards_per_row, horizontal_margin, vertical_margin):
+def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_height_px, cards_per_row, horizontal_margin, vertical_margin):
 	image = pdb.gimp_image_new(sheet_width_px, sheet_height_px, RGB)
 	for count, card_image in enumerate(card_images):
 		card_layer = pdb.gimp_layer_new(image, sheet_width_px, sheet_height_px, RGB_IMAGE, 'card #{num}: {name}'.format(num = count+1, name = card_names[count]), 100, NORMAL_MODE)

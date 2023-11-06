@@ -21,6 +21,7 @@ def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19):
 	delete_images(card_images)
 	#TODO different plugin that loads list of cards from a local directory instead of scryfall
 	#TODO open-ended "paper roll" mode
+	#TODO sick ass progress bar
 
 
 register(		

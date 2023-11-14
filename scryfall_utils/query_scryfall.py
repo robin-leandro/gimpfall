@@ -21,12 +21,16 @@ def query_scryfall(query='sol ring'):
 	response_json = search_request.json()['data'][0]
 
 	# check if image is cached
-	filename = "{name}_{id}.png".format(name = response_json['name'].encode('ascii', 'ignore').lower().replace(' ', '_'), id = response_json['id'])
+	filename = "{name}_{id}.png".format(name = response_json['name'].encode('ascii', 'ignore').lower().replace(' ', '_').replace('//', '-'), id = response_json['id'])
 	if os.path.isfile(filename):
 		return card_directory+'\\'+filename
 
 	# not cached, get from scryfall
-	png_url = response_json['image_uris']['png']
+	# double faced cards have this instead of a 'image_uris' value in the root document
+	if 'card_faces' in response_json:
+		png_url = response_json['card_faces'][0]['image_uris']['png']
+	else:
+		png_url = response_json['image_uris']['png']
 	image_request = requests.get(png_url)
 	image_file = open(filename, 'wb')
 	image_file.write(image_request.content)

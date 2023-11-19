@@ -42,7 +42,7 @@ def page_setup(sheet_width_px, sheet_height_px):
 	vertical_margin = int((sheet_height_px - cards_per_column * CARD_HEIGHT) / 2)
 	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
 
-def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px):
+def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px, cardback_path = None):
 	if CARD_WIDTH > sheet_width_px or CARD_HEIGHT > sheet_height_px:
 		raise NameError('sheet with provided dimensions cannot fit any cards')
 
@@ -55,8 +55,17 @@ def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_heig
 	card_images = map(image_from_path, card_paths)
 	cards_per_row, _, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px)
 	total_sheets = int(math.ceil(float(len(card_images))/float(cards_per_sheet)))
+
 	#just a cheeky lil debugging message keep moving along folks
 	#pdb.gimp_message("cards per row {cpr}\ncards per col {cpc}\ncards per sheet {cps}\ntotal sheets {tSheet}\nhorizontal margin {hm}\nvertical margin {vm}".format(cpr=cards_per_row,cpc = cards_per_column, cps =cards_per_sheet, tSheet = total_sheets, hm=horizontal_margin, vm=vertical_margin))
+
+	cardbacks = []
+	cardback_names = []
+	if cardback_path is not None:
+		cardback_image = crop_scale(import_into_gimp(cardback_path, False))
+		for i in range(cards_per_sheet):
+			cardback_names.append('cardback')
+			cardbacks.append(cardback_image) 
 
 	for i in range(total_sheets):
 		__arrange_cards_into_sheet(card_images[i*cards_per_sheet:(i+1)*cards_per_sheet], 
@@ -66,6 +75,14 @@ def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_heig
 		cards_per_row,
 		horizontal_margin,
 		vertical_margin)
+		if cardback_path is not None:
+			__arrange_cards_into_sheet(cardbacks, 
+				cardback_names,
+				sheet_width_px,
+				sheet_height_px,
+				cards_per_row,
+				horizontal_margin,
+				vertical_margin)
 
 	__delete_images(card_images)
 

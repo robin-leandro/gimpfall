@@ -27,20 +27,21 @@ def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19, cardback_path
 			card_paths.append(path)
 			card_names.append(card)
 	
-	_, _, cards_per_sheet, _, _ = page_setup(sheet_width_px, sheet_height_px)
-	total_sheets = int(math.ceil(float(len(card_paths)) / float(cards_per_sheet)))
+	# _, _, cards_per_sheet, _, _ = page_setup(sheet_width_px, sheet_height_px)
+	# total_sheets = int(math.ceil(float(len(card_paths)) / float(cards_per_sheet)))
 
-	new_card_paths = []
-	new_card_names = []
-	for i in range(total_sheets):
-		new_card_paths.extend(card_paths[i*cards_per_sheet:(i+1)*cards_per_sheet])
-		new_card_names.extend(card_names[i*cards_per_sheet:(i+1)*cards_per_sheet])
-		for i in range(cards_per_sheet):
-			new_card_paths.append(cardback_path)
-			new_card_names.append('cardback')
+	# new_card_paths = []
+	# new_card_names = []
+	# for i in range(total_sheets):
+	# 	new_card_paths.extend(card_paths[i*cards_per_sheet:(i+1)*cards_per_sheet])
+	# 	new_card_names.extend(card_names[i*cards_per_sheet:(i+1)*cards_per_sheet])
+	# 	for i in range(cards_per_sheet):
+	# 		new_card_paths.append(cardback_path)
+	# 		new_card_names.append('cardback')
 		
-
-	arrange_cards_into_sheets(new_card_paths, new_card_names, sheet_width_px, sheet_height_px)
+	if cardback_path == '':
+		cardback_path = None
+	arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px, cardback_path)
 	#TODO different plugin that loads list of cards from a local directory instead of scryfall
 	#TODO handle errors man, would be great to gracefully exit by deleting all leftover images
 	#TODO open-ended "paper roll" mode
@@ -63,7 +64,7 @@ register(
 		(PF_STRING, "decklist", "newline-separated list of cards to load of the form: \"(amount) (exact card name)\"", '1 mudbutton torchrunner\n1 goblin grenade'),
 		(PF_FLOAT, "sheet_width_in", "width in inches", 19),
 		(PF_FLOAT, "sheet_height_in", "height in inches", 13),
-		(PF_FILE, "cardback_path", "path to the cardback to use", default_cardback)
+		(PF_FILE, "cardback_path", "path to the cardback to use", '')
 	],
 	[],
 	load_decklist)

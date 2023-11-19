@@ -5,7 +5,7 @@ SCRYFALL_URL = 'https://api.scryfall.com'
 SEARCH_ENDPOINT = '/cards/search'
 
 plugin_path = os.path.abspath(sys.argv[0])
-card_directory = plugin_path.rpartition('\\')[0]+"\\cards"
+card_directory = plugin_path.rpartition('gimpfall')[0]+'gimpfall\\cards'
 
 if not os.path.exists(card_directory):
   os.mkdir(card_directory)

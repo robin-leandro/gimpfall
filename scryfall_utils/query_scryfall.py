@@ -9,9 +9,9 @@ card_directory = plugin_path.rpartition('gimpfall')[0]+'gimpfall\\cards'
 
 if not os.path.exists(card_directory):
   os.mkdir(card_directory)
-os.chdir(card_directory)
 
 def query_scryfall(query='sol ring'):
+	os.chdir(card_directory)
 	params = {
 		'q': '!"{q}" is:hires game:paper (border:black or border:borderless)'.format(q=query),
 		'order': 'edhrec'

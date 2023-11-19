@@ -1,58 +1,80 @@
 from gimpfu import *
 import math
-CARD_WIDTH = 744
-CARD_HEIGHT = 1038
+CARD_WIDTH_PX = 744
+CARD_HEIGHT_PX = 1038
+ALIGNMENT_ERROR_PADDING_PX = 45 # about 3/20in or 3.81mm
+CARD_WIDTH_WITH_ALIGNMENT_PADDING_PX = CARD_WIDTH_PX + (ALIGNMENT_ERROR_PADDING_PX * 2)
+CARD_HEIGHT_WITH_ALIGNMENT_PADDING_PX = CARD_HEIGHT_PX + (ALIGNMENT_ERROR_PADDING_PX * 2)
 PPI = 300
 
+GIMP_FILETYPE_HANDLERS = {
+	'png': 'file-png-load',
+	'jpg': 'file-jpeg-load',
+	'jpeg': 'file-jpeg-load'
+}
+
 def import_into_gimp(path, display=True):
-	image = pdb.file_png_load(path, path)
+	image = pdb[GIMP_FILETYPE_HANDLERS[path.rpartition('.')[2]]](path, path)
+
 	if display:
 		pdb.gimp_display_new(image)
 	return image
 
-def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT):
+def crop_scale_fill(image, target_width=CARD_WIDTH_PX, target_height=CARD_HEIGHT_PX):
 	initial_width = image.width
 	initial_height = image.height
 
-	if initial_width < target_width or initial_height < target_height:
-		pdb.gimp_message('Image is already smaller than targets')
-		return
+	if initial_width >= target_width and initial_height >= target_height:
+		# downscale and scrop
 
-	temp_height = initial_height*target_width / initial_width
-	temp_width = initial_width*target_height / initial_height
+		temp_height = initial_height*target_width / initial_width # if i set the width to target, what would be the height? (maintaining aspect ratio)
+		temp_width = initial_width*target_height / initial_height # if i set the height to target, what would be the width? (maintaining aspect ratio)
+		if temp_width >= target_width: 
+			temp_height = target_height
+		elif temp_height >= target_height:
+			temp_width = target_width
+		elif temp_height < target_height and temp_width < target_width:
+			raise NameError('the math is NOT mathing on the cropscale calculation')
 
-	#TODO make sure this algorithm is correct
-	# maybe i need to normalize by dividing by target_x ?
-	if temp_width-target_width > temp_height-target_height: 
-		temp_height = target_height
+		pdb.gimp_image_scale(image, temp_width, temp_height)
+		pdb['gimp-image-crop'](image, target_width, target_height, (abs(temp_width-target_width))/2, (abs(temp_height-target_height))/2)
+	elif initial_width <= target_width and initial_height <= target_height:
+		# upscale and fill
+		raise NameError('TODO LMAOOOOOO')
 	else:
-		temp_width = target_width
-
-	pdb.gimp_image_scale(image, temp_width, temp_height)
-	pdb['gimp-image-crop'](image, target_width, target_height, (temp_width-target_width)/2, (temp_height-target_height)/2)
+		raise NameError('TODO LMAOOOOOO')
+		# pray to cthulu???????
+		# ok the actual answer is: one of the above is closer to correct, so stop chanting the necronomicon and just do the math
+	
 	return image
 
 def page_setup(sheet_width_px, sheet_height_px):
 	# according to docs math.floor is supposed to return int
 	# but its not doing that so ugly casts it is ig
-	cards_per_row = int(math.floor(sheet_width_px / CARD_WIDTH))
-	cards_per_column = int(math.floor(sheet_height_px / CARD_HEIGHT))
+	cards_per_row = int(math.floor(sheet_width_px / CARD_WIDTH_PX))
+	cards_per_column = int(math.floor(sheet_height_px / CARD_HEIGHT_PX))
 	cards_per_sheet = cards_per_row * cards_per_column
-	horizontal_margin = int((sheet_width_px - cards_per_row * CARD_WIDTH) / 2)
-	vertical_margin = int((sheet_height_px - cards_per_column * CARD_HEIGHT) / 2)
+	horizontal_margin = int((sheet_width_px - cards_per_row * CARD_WIDTH_PX) / 2)
+	vertical_margin = int((sheet_height_px - cards_per_column * CARD_HEIGHT_PX) / 2)
 	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
 
-def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px, cardback_path = None):
-	if CARD_WIDTH > sheet_width_px or CARD_HEIGHT > sheet_height_px:
+def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px, cardback_path = None, include_alignment_margin=False):
+	if CARD_WIDTH_PX > sheet_width_px or CARD_HEIGHT_PX > sheet_height_px:
 		raise NameError('sheet with provided dimensions cannot fit any cards')
 
-	# dont wanna be double importing duplicates
+	gimp.progress_init('Importing images into Gimp...')
 	paths_dict = {}
-	def image_from_path(p):
+	def image_from_path(args):
+		count, p  = args
+		gimp.progress_init('Importing images into Gimp...')
+		gimp.progress_update(float(count)/float(len(card_paths)))
 		if p in paths_dict:
 			return paths_dict[p]
-		return paths_dict.setdefault(p, crop_scale(import_into_gimp(p, False)))
-	card_images = map(image_from_path, card_paths)
+		image = crop_scale_fill(import_into_gimp(p, False))
+		# surely theres a more elegant way than just un/commenting this lol
+		pdb.gimp_image_convert_grayscale(image)
+		return paths_dict.setdefault(p, image)
+	card_images = map(image_from_path, enumerate(card_paths))
 	cards_per_row, _, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px)
 	total_sheets = int(math.ceil(float(len(card_images))/float(cards_per_sheet)))
 
@@ -62,11 +84,12 @@ def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_heig
 	cardbacks = []
 	cardback_names = []
 	if cardback_path is not None:
-		cardback_image = crop_scale(import_into_gimp(cardback_path, False))
+		cardback_image = crop_scale_fill(import_into_gimp(cardback_path, False))
 		for i in range(cards_per_sheet):
 			cardback_names.append('cardback')
 			cardbacks.append(cardback_image) 
 
+	gimp.progress_init('Generating sheet images...')
 	for i in range(total_sheets):
 		__arrange_cards_into_sheet(card_images[i*cards_per_sheet:(i+1)*cards_per_sheet], 
 		card_names[i*cards_per_sheet:(i+1)*cards_per_sheet],
@@ -75,6 +98,7 @@ def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_heig
 		cards_per_row,
 		horizontal_margin,
 		vertical_margin)
+		gimp.progress_update(float(i*2)/float(total_sheets*2))
 		if cardback_path is not None:
 			__arrange_cards_into_sheet(cardbacks, 
 				cardback_names,
@@ -83,8 +107,11 @@ def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_heig
 				cards_per_row,
 				horizontal_margin,
 				vertical_margin)
+		gimp.progress_update(float((i*2)+1)/float(total_sheets*2))
+	
+	cleanup_temp_images()
 
-	__delete_images(card_images)
+	
 
 # assumes sheet is large enough to fit the passed cards
 def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_height_px, cards_per_row, horizontal_margin, vertical_margin):
@@ -92,8 +119,8 @@ def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_he
 	for count, card_image in enumerate(card_images):
 		card_layer = pdb.gimp_layer_new(image, sheet_width_px, sheet_height_px, RGB_IMAGE, 'card #{num}: {name}'.format(num = count+1, name = card_names[count]), 100, NORMAL_MODE)
 		image.add_layer(card_layer, count)
-		card_layer.resize(CARD_WIDTH, CARD_HEIGHT, 0, 0)
-		card_layer.set_offsets(horizontal_margin + CARD_WIDTH * (count % cards_per_row), vertical_margin + CARD_HEIGHT*(count/cards_per_row))
+		card_layer.resize(CARD_WIDTH_PX, CARD_HEIGHT_PX, 0, 0)
+		card_layer.set_offsets(horizontal_margin + CARD_WIDTH_PX * (count % cards_per_row), vertical_margin + CARD_HEIGHT_PX*(count/cards_per_row))
 		pdb.gimp_edit_copy(card_image.active_layer)
 		selection = pdb.gimp_edit_paste(card_layer, True)
 		pdb.gimp_floating_sel_anchor(selection)
@@ -103,7 +130,10 @@ def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_he
 	background_layer.fill(FILL_WHITE)
 	pdb.gimp_display_new(image)
 	
-# handles copies of the same image, blindly deleting them would throw GIMP errors
+# deletes all images without an associated display
+def cleanup_temp_images():
+	__delete_images(gimp.image_list())
+	
 def __delete_images(images):
 	for image in images:
 		if pdb.gimp_image_is_valid(image):

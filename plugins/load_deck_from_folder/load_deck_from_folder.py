@@ -9,9 +9,8 @@ module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
 sys.path.append(module_path)
 from gimp_utils.gimp import arrange_cards_into_sheets, PPI
 
-default_cardback = 'C:\\Users\\Robin\\Documents\\repos\\gimpfall\\plugins\\load_cardback\\ElementalOmnath.png'
 
-def load_deck_from_folder(path, sheet_width_in=13, sheet_height_in=19, cardback_path=default_cardback):
+def load_deck_from_folder(path, sheet_width_in=13, sheet_height_in=19, cardback_path=''):
 	os.chdir(path)
 	path_contents = os.listdir(path)
 	image_paths = map(lambda p: path+'\\'+p, path_contents)

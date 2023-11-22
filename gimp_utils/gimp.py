@@ -24,29 +24,42 @@ def crop_scale_fill(image, target_width=CARD_WIDTH_PX, target_height=CARD_HEIGHT
 	initial_width = image.width
 	initial_height = image.height
 
-	if initial_width >= target_width and initial_height >= target_height:
-		# downscale and scrop
 
-		temp_height = initial_height*target_width / initial_width # if i set the width to target, what would be the height? (maintaining aspect ratio)
-		temp_width = initial_width*target_height / initial_height # if i set the height to target, what would be the width? (maintaining aspect ratio)
-		if temp_width >= target_width: 
-			temp_height = target_height
-		elif temp_height >= target_height:
-			temp_width = target_width
-		elif temp_height < target_height and temp_width < target_width:
-			raise NameError('the math is NOT mathing on the cropscale calculation')
+	# resulting width from scaling the height to target and retaining aspect ratio
+	tentative_width = target_width * initial_height / target_height
 
-		pdb.gimp_image_scale(image, temp_width, temp_height)
-		pdb['gimp-image-crop'](image, target_width, target_height, (abs(temp_width-target_width))/2, (abs(temp_height-target_height))/2)
-	elif initial_width <= target_width and initial_height <= target_height:
-		# upscale and fill
-		raise NameError('TODO LMAOOOOOO')
-	else:
-		raise NameError('TODO LMAOOOOOO')
-		# pray to cthulu???????
-		# ok the actual answer is: one of the above is closer to correct, so stop chanting the necronomicon and just do the math
+	# resulting height from scaling the height to target and retaining aspect ratio
+	tentative_height = target_height * initial_width / target_width
 	
+	if (tentative_width > target_width and tentative_height > tentative_height) or (tentative_width < target_width and tentative_height < tentative_height):
+		# this _should_ be impossible
+		raise NameError('the crop-scale-fill math is not mathin')
+
+	if tentative_height == target_height and tentative_width == target_width:
+		# image started out with the correct aspect ratio
+		# just scale and job's done
+		pdb.gimp_image_scale(image, target_width, target_height)
+		return image
+
+	# we either need to upscale or downscale the image
+	# we'll include the equal area edge-case in the upscale path
+	rectangle_area = lambda l, w: l*w
+	upscale = rectangle_area(target_height, target_width) >= rectangle_area(initial_height, initial_width)
+	
+	if 
+
+
+	if upscale:
+		
+		return image
+	
+	# if the image was downscaled, we need to crop
+
+	#pdb.gimp_image_crop(xxx,xxx,xxx,xx,xx,xx,xx,x)
 	return image
+	
+
+
 
 def page_setup(sheet_width_px, sheet_height_px):
 	# according to docs math.floor is supposed to return int

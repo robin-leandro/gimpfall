@@ -10,10 +10,7 @@ sys.path.append(module_path)
 from scryfall_utils.query_scryfall import query_scryfall
 from gimp_utils.gimp import arrange_cards_into_sheets, PPI
 
-
-default_cardback = 'C:\\Users\\Robin\\Documents\\repos\\gimpfall\\plugins\\load_cardback\\ElementalOmnath.png'
-
-def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19, cardback_path=default_cardback):
+def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19, cardback_path=''):
 	sheet_width_px = sheet_width_in*PPI
 	sheet_height_px = sheet_height_in*PPI
 

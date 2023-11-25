@@ -3,7 +3,7 @@ from gimpfu import register, main, PF_STRING, pdb
 
 import sys, os
 plugin_path = os.path.abspath(sys.argv[0])
-module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
+module_path = os.path.join(plugin_path.rpartition('gimpfall')[0],'gimpfall')
 # not ideal to append to syspath like this
 # but since gimp runs its own python instace its required for modules to work
 sys.path.append(module_path)

@@ -3,7 +3,7 @@ from gimpfu import *
 import os, sys
 
 plugin_path = os.path.abspath(sys.argv[0])
-default_filename = plugin_path.rpartition('\\')[0]+'\\untitled.pdf'
+default_filename = os.path.join(plugin_path.rpartition(os.path.join('/'))[0],'untitled.pdf')
 
 def export_to_pdf(file_name=default_filename):
 	#TODO this gets every open image, not just every displayed image

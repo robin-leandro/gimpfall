@@ -3,7 +3,7 @@ from gimpfu import register, main, PF_INT
 
 import sys, os
 plugin_path = os.path.abspath(sys.argv[0])
-module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
+module_path = os.path.join(plugin_path.rpartition('gimpfall')[0],'gimpfall')
 # not ideal to append to syspath like this
 # but since gimp runs its own python instance its required for modules to work
 sys.path.append(module_path)
@@ -11,7 +11,6 @@ from gimp_utils.gimp import crop_scale
 
 
 def crop_and_scale_card(image, _, target_width=744, target_height=1038):
-	#pdb.gimp_message('hello world')
 	crop_scale(image, target_width, target_height)
 
 register(		

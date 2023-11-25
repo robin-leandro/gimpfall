@@ -84,7 +84,7 @@ def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_heig
 				horizontal_margin,
 				vertical_margin)
 
-	__delete_images(card_images)
+	cleanup_temp_images()
 
 # assumes sheet is large enough to fit the passed cards
 def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_height_px, cards_per_row, horizontal_margin, vertical_margin):
@@ -103,7 +103,10 @@ def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_he
 	background_layer.fill(FILL_WHITE)
 	pdb.gimp_display_new(image)
 	
-# handles copies of the same image, blindly deleting them would throw GIMP errors
+# deletes all images without an associated display
+def cleanup_temp_images():
+	__delete_images(gimp.image_list())
+
 def __delete_images(images):
 	for image in images:
 		if pdb.gimp_image_is_valid(image):

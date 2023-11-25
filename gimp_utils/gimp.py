@@ -4,8 +4,15 @@ CARD_WIDTH = 744
 CARD_HEIGHT = 1038
 PPI = 300
 
+GIMP_FILETYPE_HANDLERS = {
+	'png': 'file-png-load',
+	'jpg': 'file-jpeg-load',
+	'jpeg': 'file-jpeg-load'
+}
+
 def import_into_gimp(path, display=True):
-	image = pdb.file_png_load(path, path)
+	image = pdb[GIMP_FILETYPE_HANDLERS[path.rpartition('.')[2]]](path, path)
+
 	if display:
 		pdb.gimp_display_new(image)
 	return image

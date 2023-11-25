@@ -1,9 +1,9 @@
 #!/usr/bin/python
-from gimpfu import register, main, PF_STRING, PF_FLOAT, PF_FILE
+from gimpfu import gimp, register, main, PF_STRING, PF_FLOAT, PF_FILE
 
-import sys, os, math
+import sys, os
 plugin_path = os.path.abspath(sys.argv[0])
-module_path = plugin_path.rpartition('gimpfall')[0]+'gimpfall'
+module_path = os.path.join(plugin_path.rpartition('gimpfall')[0],'gimpfall')
 # not ideal to append to syspath like this
 # but since gimp runs its own python instace its required for modules to work
 sys.path.append(module_path)
@@ -20,32 +20,25 @@ def load_decklist(decklist, sheet_width_in=13, sheet_height_in=19, cardback_path
 	decklist = decklist.split('\n')
 	card_paths = []
 	card_names = []
-	for line in decklist:
+	gimp.progress_init('Getting images from Scryfall...')
+	for count, line in enumerate(decklist):
+		if line == '' or line.isspace():
+			continue
 		amount, _, card = line.partition(' ')
 		path = query_scryfall(card)
-		for _ in range(int(amount)):
+		for i in range(int(amount)):
 			card_paths.append(path)
 			card_names.append(card)
-	
-	# _, _, cards_per_sheet, _, _ = page_setup(sheet_width_px, sheet_height_px)
-	# total_sheets = int(math.ceil(float(len(card_paths)) / float(cards_per_sheet)))
-
-	# new_card_paths = []
-	# new_card_names = []
-	# for i in range(total_sheets):
-	# 	new_card_paths.extend(card_paths[i*cards_per_sheet:(i+1)*cards_per_sheet])
-	# 	new_card_names.extend(card_names[i*cards_per_sheet:(i+1)*cards_per_sheet])
-	# 	for i in range(cards_per_sheet):
-	# 		new_card_paths.append(cardback_path)
-	# 		new_card_names.append('cardback')
+		gimp.progress_update(float(count)/float(len(decklist)))
 		
 	if cardback_path == '':
 		cardback_path = None
-	arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px, cardback_path)
+
+	arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px, cardback_path, 800, 1100)
 	#TODO different plugin that loads list of cards from a local directory instead of scryfall
 	#TODO handle errors man, would be great to gracefully exit by deleting all leftover images
 	#TODO open-ended "paper roll" mode
-	#TODO sick ass progress bar
+	#TODO sick ass progress bar (rescue from the other branch)
 	#TODO handle double sided cards (how tho lmao)
 		# there should be a setting to choose between printing 2 cards or one double-sided cardgit add 
 	#TODO clean up the input, lets not die because of an empty line yeah?

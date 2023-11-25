@@ -2,14 +2,11 @@ import urllib2, urllib
 import json
 import os, sys
 
-#TODO remove
-from gimpfu import pdb
-
 SCRYFALL_URL = 'https://api.scryfall.com'
 SEARCH_ENDPOINT = '/cards/search'
 
 plugin_path = os.path.abspath(sys.argv[0])
-card_directory = plugin_path.rpartition('gimpfall')[0]+'gimpfall/cards'
+card_directory = os.path.join(plugin_path.rpartition('gimpfall')[0], 'gimpfall', 'cards')
 
 if not os.path.exists(card_directory):
   os.mkdir(card_directory)
@@ -29,8 +26,7 @@ def query_scryfall(query='sol ring'):
 	# check if image is cached
 	filename = "{name}_{id}.png".format(name = response_json['name'].encode('ascii', 'ignore').lower().replace(' ', '_').replace('//', '-'), id = response_json['id'])
 	if os.path.isfile(filename):
-		pdb.gimp_message('cached')
-		return card_directory+'/'+filename
+		return os.path.join(card_directory, filename)
 
 	# not cached, get from scryfall
 	# double faced cards have this instead of a 'image_uris' value in the root document
@@ -44,4 +40,4 @@ def query_scryfall(query='sol ring'):
 	image_file = open(filename, 'wb')
 	image_file.write(''.join(image_request.readlines()))
 	image_file.close()
-	return card_directory+'/'+filename
+	return os.path.join(card_directory, filename)

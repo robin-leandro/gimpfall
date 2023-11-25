@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from gimpfu import register, main, PF_STRING
+from gimpfu import register, main, PF_STRING, pdb
 
 import sys, os
 plugin_path = os.path.abspath(sys.argv[0])

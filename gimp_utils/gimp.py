@@ -14,23 +14,36 @@ def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT):
 	initial_width = image.width
 	initial_height = image.height
 
-	if initial_width < target_width or initial_height < target_height:
-		pdb.gimp_message('Image is already smaller than targets')
-		return
+	threes_rule = lambda x, a, b: int(math.floor(float(x)*float(b)/float(a)))
+	# resulting width from scaling the height to target and retaining aspect ratio
+	tentative_width =  threes_rule(initial_height, target_height, target_width) 
 
-	temp_height = initial_height*target_width / initial_width
-	temp_width = initial_width*target_height / initial_height
+	# resulting height from scaling the height to target and retaining aspect ratio
+	tentative_height = threes_rule(initial_width, target_width, target_height) 
 
-	#TODO make sure this algorithm is correct
-	# maybe i need to normalize by dividing by target_x ?
-	if temp_width-target_width > temp_height-target_height: 
-		temp_height = target_height
-	else:
-		temp_width = target_width
+	pdb.gimp_message('tentative width: {w}, tentative height: {h}'.format(w=tentative_width, h=tentative_height))
+	
+	if tentative_height == target_height and tentative_width == target_width:
+		# image started out with the correct aspect ratio
+		# just scale and job's done
+		pdb.gimp_image_scale(image, target_width, target_height)
+		return image
+	
+	if tentative_width > target_width and tentative_height > target_height:
+		# choose one dimension and crop
+		pdb.gimp_message('both bigger')
+		return image
+	
+	if tentative_width < target_width and tentative_height < target_height:
+		# choose one dimension and fill (or use the add-border script)
+		pdb.gimp_message('both smaller')
+		return image
 
-	pdb.gimp_image_scale(image, temp_width, temp_height)
-	pdb['gimp-image-crop'](image, target_width, target_height, (temp_width-target_width)/2, (temp_height-target_height)/2)
+	pdb.gimp_message('one and one')
+	use_tentative_width = tentative_height > target_height
+	#pdb.gimp_image_scale(image, tentative_width if use_tentative_width else target_width, target_height if use_tentative_width else tentative_height)
 	return image
+
 
 def page_setup(sheet_width_px, sheet_height_px):
 	# according to docs math.floor is supposed to return int

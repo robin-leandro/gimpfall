@@ -10,40 +10,43 @@ def import_into_gimp(path, display=True):
 		pdb.gimp_display_new(image)
 	return image
 
+def card_setup(image, final_width=CARD_WIDTH, final_height=CARD_HEIGHT):
+	unround_corners(image)
+	crop_scale(image, CARD_WIDTH, CARD_HEIGHT)
+	add_border(image, final_width, final_height, 'white')
+	return image
+	
+def unround_corners(image):
+	corner_layer = pdb.gimp_layer_new(image, image.width, image.height, RGB_IMAGE, 'remove corners', 100, NORMAL_MODE)
+	image.add_layer(corner_layer, 2)
+	pdb.gimp_palette_set_background('black')
+	corner_layer.fill(BACKGROUND_FILL)
+	pdb.gimp_image_flatten(image)
+	return image
+
 def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT):
 	initial_width = image.width
 	initial_height = image.height
 
-	threes_rule = lambda x, a, b: int(math.floor(float(x)*float(b)/float(a)))
-	# resulting width from scaling the height to target and retaining aspect ratio
-	tentative_width =  threes_rule(initial_height, target_height, target_width) 
+	temp_width = target_width
+	temp_height = target_height
+	if initial_width * target_height > target_width * initial_height:
+		temp_height = (target_width * initial_height) / initial_width
+	else:
+		temp_width = (target_height * initial_width) / initial_height
 
-	# resulting height from scaling the height to target and retaining aspect ratio
-	tentative_height = threes_rule(initial_width, target_width, target_height) 
-
-	pdb.gimp_message('tentative width: {w}, tentative height: {h}'.format(w=tentative_width, h=tentative_height))
-	
-	if tentative_height == target_height and tentative_width == target_width:
-		# image started out with the correct aspect ratio
-		# just scale and job's done
-		pdb.gimp_image_scale(image, target_width, target_height)
-		return image
-	
-	if tentative_width > target_width and tentative_height > target_height:
-		# choose one dimension and crop
-		pdb.gimp_message('both bigger')
-		return image
-	
-	if tentative_width < target_width and tentative_height < target_height:
-		# choose one dimension and fill (or use the add-border script)
-		pdb.gimp_message('both smaller')
-		return image
-
-	pdb.gimp_message('one and one')
-	use_tentative_width = tentative_height > target_height
-	#pdb.gimp_image_scale(image, tentative_width if use_tentative_width else target_width, target_height if use_tentative_width else tentative_height)
+	pdb.gimp_image_scale(image, temp_width, temp_height)
+	add_border(image, target_width, target_height, 'black')
 	return image
 
+def add_border(image, new_width, new_height, color):
+	pdb.gimp_image_resize(image, new_width, new_height, (new_width-image.width)/2, (new_height-image.height)/2)
+	card_layer = pdb.gimp_layer_new(image, new_width, new_height, RGB_IMAGE, 'border', 100, NORMAL_MODE)
+	image.add_layer(card_layer, 2)
+	pdb.gimp_palette_set_background(color)
+	card_layer.fill(BACKGROUND_FILL)
+	pdb.gimp_image_flatten(image)
+	return image
 
 def page_setup(sheet_width_px, sheet_height_px):
 	# according to docs math.floor is supposed to return int

@@ -17,10 +17,14 @@ def import_into_gimp(path, display=True):
 		pdb.gimp_display_new(image)
 	return image
 
-def card_setup(image, final_width=CARD_WIDTH, final_height=CARD_HEIGHT):
+def card_setup(image, final_width=CARD_WIDTH, final_height=CARD_HEIGHT, grayscale = False):
 	unround_corners(image)
 	crop_scale(image, CARD_WIDTH, CARD_HEIGHT)
+	pdb.gimp_message('w {w}\nh {h}'.format(w=image.width, h=image.height))
 	add_border(image, final_width, final_height, 'white')
+	if grayscale:
+		pdb.gimp_image_convert_grayscale(image)
+	pdb.gimp_message('w {w}\nh {h}'.format(w=image.width, h=image.height))
 	return image
 	
 def unround_corners(image):
@@ -65,19 +69,23 @@ def page_setup(sheet_width_px, sheet_height_px, item_width=CARD_WIDTH, item_heig
 	vertical_margin = int((sheet_height_px - cards_per_column * item_height) / 2)
 	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
 
-def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px, cardback_path = None, item_width=CARD_WIDTH, item_height=CARD_HEIGHT):
+def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_height_px, cardback_path = None, item_width=CARD_WIDTH, item_height=CARD_HEIGHT, greyscale=False):
 	if item_width > sheet_width_px or item_height > sheet_height_px:
 		raise NameError('sheet with provided dimensions cannot fit any cards')
 
 	# dont wanna be double importing duplicates
 	paths_dict = {}
-	def image_from_path(p):
+	gimp.progress_init('Importing images into Gimp...')
+	def image_from_path(args):
+		count, p = args
+		gimp.progress_init('Importing images into Gimp...')
+		gimp.progress_update(float(count)/float(len(card_paths)))
 		if p in paths_dict:
 			return paths_dict[p]
-		return paths_dict.setdefault(p, card_setup(import_into_gimp(p, False), item_width, item_height))
-	card_images = map(image_from_path, card_paths)
+		return paths_dict.setdefault(p, card_setup(import_into_gimp(p, False), item_width, item_height, greyscale))
+	card_images = map(image_from_path, enumerate(card_paths))
 
-	cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px, item_width, item_height)
+	cards_per_row, _, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px, item_width, item_height)
 	total_sheets = int(math.ceil(float(len(card_images))/float(cards_per_sheet)))
 
 	#just a cheeky lil debugging message keep moving along folks
@@ -91,7 +99,10 @@ def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_heig
 			cardback_names.append('cardback')
 			cardbacks.append(cardback_image) 
 
+	sheets_and_cardbacks = total_sheets if cardback_path is None else total_sheets*2
 	for i in range(total_sheets):
+		gimp.progress_init('Generating proxy sheet {n} of {ts}'.format(n=i+1, ts=sheets_and_cardbacks))
+		gimp.progress_update(float(i)/float(sheets_and_cardbacks))
 		__arrange_cards_into_sheet(card_images[i*cards_per_sheet:(i+1)*cards_per_sheet], 
 		card_names[i*cards_per_sheet:(i+1)*cards_per_sheet],
 		sheet_width_px,
@@ -111,6 +122,7 @@ def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_heig
 				vertical_margin,
 				item_width, 
 				item_height)
+			gimp.progress_update(float(i+1)/float(sheets_and_cardbacks))
 
 	cleanup_temp_images()
 
@@ -125,6 +137,7 @@ def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_he
 		pdb.gimp_edit_copy(card_image.active_layer)
 		selection = pdb.gimp_edit_paste(card_layer, True)
 		pdb.gimp_floating_sel_anchor(selection)
+		pdb.gimp_progress_pulse()
 	
 	background_layer = pdb.gimp_layer_new(image, sheet_width_px, sheet_height_px, RGB_IMAGE, 'background', 100, NORMAL_MODE)
 	image.add_layer(background_layer, len(image.layers))

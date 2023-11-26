@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from gimpfu import register, main, PF_FLOAT, PF_FILE
+from gimpfu import register, main, PF_FLOAT, PF_FILE, pdb
 
 import sys, os
 plugin_path = os.path.abspath(sys.argv[0])
@@ -9,7 +9,7 @@ module_path = os.path.join(plugin_path.rpartition('gimpfall')[0],'gimpfall')
 sys.path.append(module_path)
 from gimp_utils.gimp import arrange_cards_into_sheets, page_setup, PPI
 
-default_cardback = plugin_path.rpartition('\\')[0]+'\\Tolaria_Cardback.png'
+default_cardback = os.path.join(module_path, 'Tolaria_Cardback.png')
 
 def load_cardback(file_name=default_cardback, sheet_width_in=19, sheet_height_in=13):
 	sheet_width_px = sheet_width_in*PPI

@@ -18,7 +18,7 @@ def load_decklist_local(path, sheet_width_in=13, sheet_height_in=19, cardback_pa
 	if cardback_path == '':
 		cardback_path = None
 
-	arrange_cards_into_sheets(image_paths, image_names, sheet_width_in*PPI, sheet_height_in*PPI, cardback_path, CARD_WIDTH+int(PPI*card_margin_x_in/2), CARD_HEIGHT+int(PPI*card_margin_y_in/2), greyscale)
+	arrange_cards_into_sheets(image_paths, image_names, sheet_width_in*PPI, sheet_height_in*PPI, cardback_path, CARD_WIDTH+int(PPI*card_margin_x_in/2), CARD_HEIGHT+int(PPI*card_margin_y_in/2), greyscale=False)
 		
 
 

@@ -19,12 +19,10 @@ def import_into_gimp(path, display=True):
 
 def card_setup(image, final_width=CARD_WIDTH, final_height=CARD_HEIGHT, grayscale = False):
 	unround_corners(image)
-	crop_scale(image, CARD_WIDTH, CARD_HEIGHT)
-	pdb.gimp_message('w {w}\nh {h}'.format(w=image.width, h=image.height))
+	crop_scale(image, CARD_WIDTH, CARD_HEIGHT, 'crop')
 	add_border(image, final_width, final_height, 'white')
 	if grayscale:
 		pdb.gimp_image_convert_grayscale(image)
-	pdb.gimp_message('w {w}\nh {h}'.format(w=image.width, h=image.height))
 	return image
 	
 def unround_corners(image):
@@ -35,20 +33,29 @@ def unround_corners(image):
 	pdb.gimp_image_flatten(image)
 	return image
 
-def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT):
+def crop_scale(image, target_width=CARD_WIDTH, target_height=CARD_HEIGHT, strategy='fill'):
 	initial_width = image.width
 	initial_height = image.height
 
 	temp_width = target_width
 	temp_height = target_height
-	if initial_width * target_height > target_width * initial_height:
+	if strategy=='fill' and initial_width * target_height > target_width * initial_height:
 		temp_height = (target_width * initial_height) / initial_width
 	else:
 		temp_width = (target_height * initial_width) / initial_height
 
 	pdb.gimp_image_scale(image, temp_width, temp_height)
-	add_border(image, target_width, target_height, 'black')
-	return image
+
+	if strategy=='fill':
+		add_border(image, target_width, target_height, 'black')
+		return image
+
+	if strategy=='crop':
+		pdb.gimp_message('we croppin a {w}x{h} to {w2}x{h2}'.format(w=temp_width, h=temp_height, w2=target_width, h2=target_height))
+		#pdb.gimp_image_crop(image, target_width, target_height, (abs(temp_width-target_width))/2, (abs(temp_height-target_height))/2)
+		return image
+
+	raise NameError('no strategy {s}'.format(s=strategy))
 
 def add_border(image, new_width, new_height, color):
 	pdb.gimp_image_resize(image, new_width, new_height, (new_width-image.width)/2, (new_height-image.height)/2)
@@ -88,7 +95,7 @@ def arrange_cards_into_sheets(card_paths, card_names, sheet_width_px, sheet_heig
 	cards_per_row, _, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px, item_width, item_height)
 	total_sheets = int(math.ceil(float(len(card_images))/float(cards_per_sheet)))
 
-	#just a cheeky lil debugging message keep moving along folks
+	#just a cheeky lil debugging message, keep moving along folks
 	#pdb.gimp_message("cards per row {cpr}\ncards per col {cpc}\ncards per sheet {cps}\ntotal sheets {tSheet}\nhorizontal margin {hm}\nvertical margin {vm}".format(cpr=cards_per_row,cpc = cards_per_column, cps =cards_per_sheet, tSheet = total_sheets, hm=horizontal_margin, vm=vertical_margin))
 
 	cardbacks = []

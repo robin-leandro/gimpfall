@@ -10,7 +10,7 @@ from gimp_utils.gimp import crop_scale, card_setup
 
 
 def crop_and_scale_card(image, _, target_width=744, target_height=1038):
-	#crop_scale(image, target_width, target_height)
+	crop_scale(image, target_width, target_height, 'crop')
 	card_setup(image, target_width, target_height)
 
 register(		

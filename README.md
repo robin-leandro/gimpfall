@@ -3,6 +3,5 @@
 #TODO open-ended "paper roll" mode
 
 missing options:
-	- spacing between cards
 	- how much to enlarge cardbacks
 	- choose how to handle double sided cards (different cards vs double-sided)

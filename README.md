@@ -5,3 +5,4 @@
 	# there should be a setting to choose between printing 2 cards or one double-sided cards
 #TODO option to automatically remove 1/8in margins
 #TODO handle settings as an object
+#TODO probably get rid of the load_cardback plugin

@@ -7,13 +7,13 @@ module_path = os.path.join(plugin_path.rpartition('gimpfall')[0],'gimpfall')
 # not ideal to append to syspath like this
 # but since gimp runs its own python instance its required for modules to work
 sys.path.append(module_path)
-from gimp_utils.gimp import arrange_cards_into_sheets, page_setup, PPI
+from gimp_utils.gimp import arrange_cards_into_sheets, page_setup, in_to_px
 
 default_cardback = os.path.join(module_path, 'Tolaria_Cardback.png')
 
 def load_cardback(file_name=default_cardback, sheet_width_in=19, sheet_height_in=13):
-	sheet_width_px = sheet_width_in*PPI
-	sheet_height_px = sheet_height_in*PPI
+	sheet_width_px = in_to_px(sheet_width_in)
+	sheet_height_px = in_to_px(sheet_height_in)
 	_, _, cards_per_sheet, _, _ = page_setup(sheet_width_px, sheet_height_px)
 
 	paths = []

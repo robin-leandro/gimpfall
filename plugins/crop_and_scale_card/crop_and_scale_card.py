@@ -6,12 +6,14 @@ module_path = os.path.join(plugin_path.rpartition('gimpfall')[0],'gimpfall')
 # not ideal to append to syspath like this
 # but since gimp runs its own python instance its required for modules to work
 sys.path.append(module_path)
-from gimp_utils.gimp import crop_scale, card_setup
+from gimp_utils.gimp import crop_scale, card_setup, crop_inches_proportionally
 
 
 def crop_and_scale_card(image, _, target_width=744, target_height=1038):
-	crop_scale(image, target_width, target_height, 'crop')
-	card_setup(image, target_width, target_height)
+	crop_scale(image, target_width, target_height, 'fill')
+	#card_setup(image, target_width, target_height)
+	#crop_inches_proportionally(0.125, image, target_width, target_height)
+
 
 register(		
 	"crop_and_scale_card",

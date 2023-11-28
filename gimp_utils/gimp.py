@@ -22,10 +22,13 @@ def import_into_gimp(path, display=True):
 		pdb.gimp_display_new(image)
 	return image
 
-def card_setup(image, final_width, final_height, grayscale = False):
+def card_setup(image, final_width, final_height, grayscale, fix_eighth_inch_margin):
 	unround_corners(image)
+	if fix_eighth_inch_margin:
+		crop_inches_proportionally(0.125, image, final_width, final_height)
 	crop_scale(image, final_width, final_height, 'crop')
-	add_border(image, final_width, final_height, 'white')
+	# add_border is how ill implement space between cards
+	#add_border(image, final_width, final_height, 'white')
 	if grayscale:
 		pdb.gimp_image_convert_grayscale(image)
 	return image
@@ -37,6 +40,12 @@ def unround_corners(image):
 	corner_layer.fill(BACKGROUND_FILL)
 	pdb.gimp_image_flatten(image)
 	return image
+
+def crop_inches_proportionally(inches, image, card_width, card_height):
+	inches_in_px = in_to_px(inches)
+	proportional_width = image.width*inches_in_px/card_width
+	proportional_height = image.height*inches_in_px/card_height
+	pdb.gimp_image_crop(image, image.width-proportional_width, image.height-proportional_height, proportional_width/2, proportional_height/2)
 
 def crop_scale(image, target_width, target_height, strategy='fill'):
 	initial_width = image.width
@@ -58,7 +67,7 @@ def crop_scale(image, target_width, target_height, strategy='fill'):
 	if strategy=='crop':
 		#TODO: fix
 		#pdb.gimp_message('we croppin a {w}x{h} to {w2}x{h2}'.format(w=temp_width, h=temp_height, w2=target_width, h2=target_height))
-		#pdb.gimp_image_crop(image, target_width, target_height, (abs(temp_width-target_width))/2, (abs(temp_height-target_height))/2)
+		pdb.gimp_image_crop(image, target_width, target_height, (abs(temp_width-target_width))/2, (abs(temp_height-target_height))/2)
 		return image
 
 	raise NameError('no strategy {s}'.format(s=strategy))
@@ -83,7 +92,7 @@ def page_setup(sheet_width_px, sheet_height_px, card_width, card_height):
 	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
 
 def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
-	sheet_width_in, sheet_height_in, cardback_path, card_width_cm, card_height_cm, greyscale, fix_eighth_in_margin = proxy_settings.get_all()
+	sheet_width_in, sheet_height_in, card_width_cm, card_height_cm, cardback_path, greyscale, fix_eighth_in_margin = proxy_settings.get_all()
 	sheet_width_px, sheet_height_px = in_to_px(sheet_width_in), in_to_px(sheet_height_in)
 	card_width, card_height = cm_to_px(card_width_cm), cm_to_px(card_height_cm)
 
@@ -99,7 +108,7 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 		gimp.progress_update(float(count)/float(len(card_paths)))
 		if p in paths_dict:
 			return paths_dict[p]
-		return paths_dict.setdefault(p, card_setup(import_into_gimp(p, False), card_width, card_height, greyscale))
+		return paths_dict.setdefault(p, card_setup(import_into_gimp(p, False), card_width, card_height, greyscale, fix_eighth_in_margin))
 	card_images = map(image_from_path, enumerate(card_paths))
 
 	cards_per_row, _, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px, card_width, card_height)

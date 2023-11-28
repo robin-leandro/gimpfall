@@ -1,6 +1,4 @@
-from gimpfu import PF_FLOAT, PF_FILE, PF_BOOL, PF_STRING
-from functools import reduce
-
+from gimpfu import PF_FLOAT, PF_FILE, PF_BOOL
 def get_default_settings():
     i = [-1]
     def inc():
@@ -21,13 +19,6 @@ def get_default_settings():
             'value':13, 
             'order':inc()
         },
-        'cardback_path': {
-            'type': PF_FILE, 
-            'name': 'cardback_path', 
-            'description':'path to the cardback to use', 
-            'value':'', 
-            'order':inc()
-        },
         'card_width_cm': {
             'type': PF_FLOAT, 
             'name': 'card_width_cm', 
@@ -40,6 +31,13 @@ def get_default_settings():
             'name': 'card_height_cm', 
             'description':'height of each card in centimeters', 
             'value':8.8, 
+            'order':inc()
+        },
+        'cardback_path': {
+            'type': PF_FILE, 
+            'name': 'cardback_path', 
+            'description':'path to the cardback to use', 
+            'value':'', 
             'order':inc()
         },
         'greyscale': {

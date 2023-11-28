@@ -8,35 +8,35 @@ def get_default_settings():
         'sheet_width_in': {
             'type': PF_FLOAT, 
             'name':'sheet_width_in', 
-            'description':'width in inches', 
+            'description':'Width in inches:', 
             'value':19, 
             'order':inc()
         },
         'sheet_height_in': {
             'type': PF_FLOAT, 
             'name': 'sheet_height_in', 
-            'description':'height in inches', 
+            'description':'Height in inches:', 
             'value':13, 
             'order':inc()
         },
         'card_width_cm': {
             'type': PF_FLOAT, 
             'name': 'card_width_cm', 
-            'description':'width of each card in centimeters', 
+            'description':'Width of each card in centimeters:', 
             'value': 6.3, 
             'order':inc()
         },
         'card_height_px': {
             'type': PF_FLOAT, 
             'name': 'card_height_cm', 
-            'description':'height of each card in centimeters', 
+            'description':'Height of each card in centimeters:', 
             'value':8.8, 
             'order':inc()
         },
         'cardback_path': {
             'type': PF_FILE, 
             'name': 'cardback_path', 
-            'description':'path to the cardback to use', 
+            'description':'Path to the cardback to use:', 
             'value':'', 
             'order':inc()
         },
@@ -52,6 +52,13 @@ def get_default_settings():
             'name': 'fix_eighth_in_margin', 
             'description':'Fix 1/8th inch margin?', 
             'value':False, 
+            'order':inc()
+        },
+        'evenly_space_cards': {
+            'type': PF_BOOL, 
+            'name': 'evenly_space_cards', 
+            'description':'Leave even spaces between cards?', 
+            'value':True, 
             'order':inc()
         }
     }

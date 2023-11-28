@@ -27,8 +27,6 @@ def card_setup(image, final_width, final_height, grayscale, fix_eighth_inch_marg
 	if fix_eighth_inch_margin:
 		crop_inches_proportionally(0.125, image, final_width, final_height)
 	crop_scale(image, final_width, final_height, 'crop')
-	# add_border is how ill implement space between cards
-	#add_border(image, final_width, final_height, 'white')
 	if grayscale:
 		pdb.gimp_image_convert_grayscale(image)
 	return image
@@ -65,15 +63,14 @@ def crop_scale(image, target_width, target_height, strategy='fill'):
 		return image
 
 	if strategy=='crop':
-		#TODO: fix
 		#pdb.gimp_message('we croppin a {w}x{h} to {w2}x{h2}'.format(w=temp_width, h=temp_height, w2=target_width, h2=target_height))
 		pdb.gimp_image_crop(image, target_width, target_height, (abs(temp_width-target_width))/2, (abs(temp_height-target_height))/2)
 		return image
 
 	raise NameError('no strategy {s}'.format(s=strategy))
 
-def add_border(image, new_width, new_height, color):
-	pdb.gimp_image_resize(image, new_width, new_height, (new_width-image.width)/2, (new_height-image.height)/2)
+def add_border(image, new_width, new_height, color, offset=0.5):
+	pdb.gimp_image_resize(image, new_width, new_height, int((new_width-image.width)*offset), int((new_height-image.height)*offset))
 	card_layer = pdb.gimp_layer_new(image, new_width, new_height, RGB_IMAGE, 'border', 100, NORMAL_MODE)
 	image.add_layer(card_layer, 2)
 	pdb.gimp_palette_set_background(color)
@@ -92,7 +89,7 @@ def page_setup(sheet_width_px, sheet_height_px, card_width, card_height):
 	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
 
 def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
-	sheet_width_in, sheet_height_in, card_width_cm, card_height_cm, cardback_path, greyscale, fix_eighth_in_margin = proxy_settings.get_all()
+	sheet_width_in, sheet_height_in, card_width_cm, card_height_cm, cardback_path, greyscale, fix_eighth_in_margin, evenly_space_cards = proxy_settings.get_all()
 	sheet_width_px, sheet_height_px = in_to_px(sheet_width_in), in_to_px(sheet_height_in)
 	card_width, card_height = cm_to_px(card_width_cm), cm_to_px(card_height_cm)
 
@@ -111,7 +108,7 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 		return paths_dict.setdefault(p, card_setup(import_into_gimp(p, False), card_width, card_height, greyscale, fix_eighth_in_margin))
 	card_images = map(image_from_path, enumerate(card_paths))
 
-	cards_per_row, _, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px, card_width, card_height)
+	cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin = page_setup(sheet_width_px, sheet_height_px, card_width, card_height)
 	total_sheets = int(math.ceil(float(len(card_images))/float(cards_per_sheet)))
 
 	#just a cheeky lil debugging message, keep moving along folks
@@ -127,6 +124,20 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 			cardback_names.append('cardback')
 			cardbacks.append(cardback_image) 
 
+	if evenly_space_cards:
+		# just add a white border to each card
+		gap_size_x = (sheet_width_px - cards_per_row*card_width)/(cards_per_row+1)
+		card_width += gap_size_x
+		gap_size_y = (sheet_height_px - cards_per_column*card_height)/(cards_per_column+1)
+		card_height += gap_size_y
+		print('\n\n\n\ngap x: {x}\ngap y: {y}'.format(x=gap_size_x, y=gap_size_y))
+		for image in card_images:
+			add_border(image, card_width, card_height, 'white', 1)
+		for cardback in cardbacks:
+			add_border(cardback, card_width, card_height, 'white', 1)
+		horizontal_margin = 0
+		vertical_margin = 0
+
 	sheets_and_cardbacks = total_sheets if cardback_path is None else total_sheets*2
 	for i in range(total_sheets):
 		gimp.progress_init('Generating proxy sheet {n} of {ts}'.format(n=i+1, ts=sheets_and_cardbacks))
@@ -140,7 +151,9 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 		vertical_margin,
 		card_width, 
 		card_height)
-		if cardback_path is not None:
+		if cardback_path is not None:			
+			gimp.progress_init('Generating proxy sheet {n} of {ts}'.format(n=i+2, ts=sheets_and_cardbacks))
+			gimp.progress_update(float(i+1)/float(sheets_and_cardbacks))
 			__arrange_cards_into_sheet(cardbacks, 
 				cardback_names,
 				sheet_width_px,
@@ -150,7 +163,7 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 				vertical_margin,
 				card_width, 
 				card_height)
-			gimp.progress_update(float(i+1)/float(sheets_and_cardbacks))
+
 
 	cleanup_temp_images()
 

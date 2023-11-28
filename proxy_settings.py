@@ -68,26 +68,11 @@ class ProxySettings:
         for setting in self.settings.keys():
             self.settings[setting]['value'] = args[0][self.settings[setting]['order']]
 
-    def set(self, name, value):
-        self.settings[name]['value']=value
-
     def get(self, name):
         return self.settings[name]['value']
     
     def get_all(self):
         return tuple(map(lambda s: s['value'], sorted(self.settings.values(), key= lambda s: s['order'])))
-    
-    # def get_all(self):
-    #     def aaaa(acc, sett):
-    #         acc.update({sett['name']: sett['value']})
-    #         return acc
-    #     return reduce(aaaa, self.settings.values(), {})
-
-
-
-
-
-
 
 
 

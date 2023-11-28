@@ -113,7 +113,6 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 	if cardback_path is '':
 		cardback_path = None
 	if cardback_path is not None:
-		print('\n\n\n\n\nAAAAAAAAAAAAAAAAAAAA\n\n\n\n')
 		cardback_image = crop_scale(import_into_gimp(cardback_path, False), card_width, card_height)
 		for i in range(cards_per_sheet):
 			cardback_names.append('cardback')

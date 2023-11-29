@@ -3,5 +3,5 @@
 #TODO open-ended "paper roll" mode
 
 missing options:
-	- how much to enlarge cardbacks
+	- enlarge cardbacks works but its a lil scuffed
 	- choose how to handle double sided cards (different cards vs double-sided)

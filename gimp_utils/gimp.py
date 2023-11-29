@@ -12,7 +12,8 @@ def cm_to_px(cm):
 GIMP_FILETYPE_HANDLERS = {
 	'png': 'file-png-load',
 	'jpg': 'file-jpeg-load',
-	'jpeg': 'file-jpeg-load'
+	'jpeg': 'file-jpeg-load',
+	'webp': 'webp'
 }
 
 def import_into_gimp(path, display=True):
@@ -32,7 +33,7 @@ def card_setup(image, final_width, final_height, grayscale, fix_eighth_inch_marg
 	return image
 	
 def unround_corners(image):
-	corner_layer = pdb.gimp_layer_new(image, image.width, image.height, RGB_IMAGE, 'remove corners', 100, NORMAL_MODE)
+	corner_layer = pdb.gimp_layer_new(image, image.width, image.height, image.base_type, 'remove corners', 100, NORMAL_MODE)
 	image.add_layer(corner_layer, 2)
 	pdb.gimp_palette_set_background('black')
 	corner_layer.fill(BACKGROUND_FILL)
@@ -48,30 +49,29 @@ def crop_inches_proportionally(inches, image, card_width, card_height):
 def crop_scale(image, target_width, target_height, strategy='fill'):
 	initial_width = image.width
 	initial_height = image.height
-
 	temp_width = target_width
 	temp_height = target_height
-	if strategy=='fill' and initial_width * target_height > target_width * initial_height:
+	if (strategy=='fill') == (float(initial_width) * float(target_height) >= float(target_width) * float(initial_height)):
 		temp_height = (target_width * initial_height) / initial_width
 	else:
 		temp_width = (target_height * initial_width) / initial_height
 
 	pdb.gimp_image_scale(image, temp_width, temp_height)
-
 	if strategy=='fill':
 		add_border(image, target_width, target_height, 'black')
 		return image
 
 	if strategy=='crop':
-		#pdb.gimp_message('we croppin a {w}x{h} to {w2}x{h2}'.format(w=temp_width, h=temp_height, w2=target_width, h2=target_height))
-		pdb.gimp_image_crop(image, target_width, target_height, (abs(temp_width-target_width))/2, (abs(temp_height-target_height))/2)
+		pdb.gimp_image_crop(image, target_width, target_height, (temp_width-target_width)/2, (temp_height-target_height)/2)
 		return image
 
 	raise NameError('no strategy {s}'.format(s=strategy))
 
 def add_border(image, new_width, new_height, color, offset=0.5):
 	pdb.gimp_image_resize(image, new_width, new_height, int((new_width-image.width)*offset), int((new_height-image.height)*offset))
-	card_layer = pdb.gimp_layer_new(image, new_width, new_height, RGB_IMAGE, 'border', 100, NORMAL_MODE)
+	# somehow just using image.base_type doesnt work, gimp_image_convert_grayscale sets to something other than rgb or greyscale
+	# but it still wants new layers to be gray
+	card_layer = pdb.gimp_layer_new(image, new_width, new_height, RGB_IMAGE if image.base_type == RGB_IMAGE else GRAY_IMAGE, 'border', 100, NORMAL_MODE)
 	image.add_layer(card_layer, 2)
 	pdb.gimp_palette_set_background(color)
 	card_layer.fill(BACKGROUND_FILL)
@@ -89,12 +89,15 @@ def page_setup(sheet_width_px, sheet_height_px, card_width, card_height):
 	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
 
 def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
-	sheet_width_in, sheet_height_in, card_width_cm, card_height_cm, cardback_path, greyscale, fix_eighth_in_margin, evenly_space_cards = proxy_settings.get_all()
+	sheet_width_in, sheet_height_in, card_width_cm, card_height_cm, cardback_path,\
+		  greyscale, fix_eighth_in_margin, evenly_space_cards, cardback_scale_percent = proxy_settings.get_all()
 	sheet_width_px, sheet_height_px = in_to_px(sheet_width_in), in_to_px(sheet_height_in)
 	card_width, card_height = cm_to_px(card_width_cm), cm_to_px(card_height_cm)
 
 	if card_width > sheet_width_px or card_height > sheet_height_px:
 		raise NameError('sheet with provided dimensions cannot fit any cards')
+	if cardback_scale_percent > 0 and evenly_space_cards is not True:
+		raise NameError('cannnot upscale cardbacks if evenly_space_cards = False')
 
 	# dont wanna be double importing duplicates
 	paths_dict = {}
@@ -130,11 +133,25 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 		card_width += gap_size_x
 		gap_size_y = (sheet_height_px - cards_per_column*card_height)/(cards_per_column+1)
 		card_height += gap_size_y
-		print('\n\n\n\ngap x: {x}\ngap y: {y}'.format(x=gap_size_x, y=gap_size_y))
+		
+		fixed_images = set()
 		for image in card_images:
-			add_border(image, card_width, card_height, 'white', 1)
+			if image.ID in fixed_images:
+				continue
+			add_border(image, card_width, card_height, 'white', 0.5)
+			fixed_images.add(image.ID)
+		
 		for cardback in cardbacks:
-			add_border(cardback, card_width, card_height, 'white', 1)
+			if cardback.ID in fixed_images:
+				continue
+
+			scaled_x = cardback.width + (cardback.width * cardback_scale_percent / 100)
+			scaled_y = cardback.height + (cardback.height * cardback_scale_percent / 100)
+			if scaled_x > card_width or scaled_y > card_height:
+				raise NameError('cardback_scale_percent too large to fix in sheet')
+			crop_scale(cardback, scaled_x, scaled_y, 'fill')
+			add_border(cardback, card_width, card_height, 'white', 0.5)
+			fixed_images.add(cardback.ID)
 		horizontal_margin = 0
 		vertical_margin = 0
 
@@ -148,33 +165,29 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 		sheet_height_px,
 		cards_per_row,
 		horizontal_margin,
-		vertical_margin,
-		card_width, 
-		card_height)
+		vertical_margin)
 		if cardback_path is not None:			
 			gimp.progress_init('Generating proxy sheet {n} of {ts}'.format(n=i+2, ts=sheets_and_cardbacks))
 			gimp.progress_update(float(i+1)/float(sheets_and_cardbacks))
-			__arrange_cards_into_sheet(cardbacks, 
+			__arrange_cards_into_sheet(cardbacks,
 				cardback_names,
 				sheet_width_px,
 				sheet_height_px,
 				cards_per_row,
 				horizontal_margin,
-				vertical_margin,
-				card_width, 
-				card_height)
+				vertical_margin) 
 
 
 	cleanup_temp_images()
 
 # assumes sheet is large enough to fit the passed cards
-def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_height_px, cards_per_row, horizontal_margin, vertical_margin, card_width, card_height):
+def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_height_px, cards_per_row, horizontal_margin, vertical_margin):
 	image = pdb.gimp_image_new(sheet_width_px, sheet_height_px, RGB)
 	for count, card_image in enumerate(card_images):
 		card_layer = pdb.gimp_layer_new(image, sheet_width_px, sheet_height_px, RGB_IMAGE, 'card #{num}: {name}'.format(num = count+1, name = card_names[count]), 100, NORMAL_MODE)
 		image.add_layer(card_layer, count)
-		card_layer.resize(card_width, card_height, 0, 0)
-		card_layer.set_offsets(horizontal_margin + card_width * (count % cards_per_row), vertical_margin + card_height*(count/cards_per_row))
+		card_layer.resize(card_image.width, card_image.height, 0, 0)
+		card_layer.set_offsets(horizontal_margin + card_image.width * (count % cards_per_row), vertical_margin + card_image.height*(count/cards_per_row))
 		pdb.gimp_edit_copy(card_image.active_layer)
 		selection = pdb.gimp_edit_paste(card_layer, True)
 		pdb.gimp_floating_sel_anchor(selection)

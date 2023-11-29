@@ -60,6 +60,13 @@ def get_default_settings():
             'description':'Leave even spaces between cards?', 
             'value':True, 
             'order':inc()
+        },
+        'cardback_scale_percent': {
+            'type': PF_FLOAT,
+            'name': 'cardback_scale_percent', 
+            'description':'Percent to enlarge cardbacks as compared to front faces (evenly_space_cards must be true if <0):', 
+            'value':0.0, 
+            'order':inc()
         }
     }
 

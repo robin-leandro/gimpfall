@@ -65,7 +65,7 @@ def get_default_settings():
             'type': PF_FLOAT,
             'name': 'cardback_scale_percent', 
             'description':'Percent to enlarge cardbacks as compared to front faces (evenly_space_cards must be true if <0):', 
-            'value':0.0, 
+            'value':1.5, 
             'order':inc()
         }
     }

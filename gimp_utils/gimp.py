@@ -133,6 +133,10 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 		card_width += gap_size_x
 		gap_size_y = (sheet_height_px - cards_per_column*card_height)/(cards_per_column+1)
 		card_height += gap_size_y
+		# each card has half the gap on both sides, and they add together to form the entire gap
+		# meaning we need to add a half gap before the first gap
+		horizontal_margin = gap_size_x/2
+		vertical_margin = gap_size_y/2
 		
 		fixed_images = set()
 		for image in card_images:
@@ -152,8 +156,6 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 			crop_scale(cardback, scaled_x, scaled_y, 'fill')
 			add_border(cardback, card_width, card_height, 'white', 0.5)
 			fixed_images.add(cardback.ID)
-		horizontal_margin = 0
-		vertical_margin = 0
 
 	sheets_and_cardbacks = total_sheets if cardback_path is None else total_sheets*2
 	for i in range(total_sheets):
@@ -176,8 +178,6 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 				cards_per_row,
 				horizontal_margin,
 				vertical_margin) 
-
-
 	cleanup_temp_images()
 
 # assumes sheet is large enough to fit the passed cards

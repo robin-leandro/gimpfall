@@ -13,7 +13,7 @@ GIMP_FILETYPE_HANDLERS = {
 	'png': 'file-png-load',
 	'jpg': 'file-jpeg-load',
 	'jpeg': 'file-jpeg-load',
-	'webp': 'webp'
+	'webp': 'file-webp-load'
 }
 
 def import_into_gimp(path, display=True):
@@ -33,7 +33,9 @@ def card_setup(image, final_width, final_height, grayscale, fix_eighth_inch_marg
 	return image
 	
 def unround_corners(image):
-	corner_layer = pdb.gimp_layer_new(image, image.width, image.height, image.base_type, 'remove corners', 100, NORMAL_MODE)
+	# i dont know why i need to multiply base_type by 2
+	# i just know i do and it was a HUGE PITA to figure this out
+	corner_layer = pdb.gimp_layer_new(image, image.width, image.height, image.base_type*2, 'remove corners', 100, NORMAL_MODE)
 	image.add_layer(corner_layer, 2)
 	pdb.gimp_palette_set_background('black')
 	corner_layer.fill(BACKGROUND_FILL)
@@ -69,9 +71,9 @@ def crop_scale(image, target_width, target_height, strategy='fill'):
 
 def add_border(image, new_width, new_height, color, offset=0.5):
 	pdb.gimp_image_resize(image, new_width, new_height, int((new_width-image.width)*offset), int((new_height-image.height)*offset))
-	# somehow just using image.base_type doesnt work, gimp_image_convert_grayscale sets to something other than rgb or greyscale
-	# but it still wants new layers to be gray
-	card_layer = pdb.gimp_layer_new(image, new_width, new_height, RGB_IMAGE if image.base_type == RGB_IMAGE else GRAY_IMAGE, 'border', 100, NORMAL_MODE)
+	# i dont know why i need to multiply base_type by 2
+	# i just know i do and it was a HUGE PITA to figure this out
+	card_layer = pdb.gimp_layer_new(image, new_width, new_height, image.base_type*2, 'border', 100, NORMAL_MODE)
 	image.add_layer(card_layer, 2)
 	pdb.gimp_palette_set_background(color)
 	card_layer.fill(BACKGROUND_FILL)
@@ -159,8 +161,8 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 
 	sheets_and_cardbacks = total_sheets if cardback_path is None else total_sheets*2
 	for i in range(total_sheets):
-		gimp.progress_init('Generating proxy sheet {n} of {ts}'.format(n=i+1, ts=sheets_and_cardbacks))
-		gimp.progress_update(float(i)/float(sheets_and_cardbacks))
+		gimp.progress_init('Generating proxy sheet {n} of {ts}'.format(n=2*i+1, ts=sheets_and_cardbacks))
+		gimp.progress_update(float(2*i)/float(sheets_and_cardbacks))
 		__arrange_cards_into_sheet(card_images[i*cards_per_sheet:(i+1)*cards_per_sheet], 
 		card_names[i*cards_per_sheet:(i+1)*cards_per_sheet],
 		sheet_width_px,
@@ -169,8 +171,8 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 		horizontal_margin,
 		vertical_margin)
 		if cardback_path is not None:			
-			gimp.progress_init('Generating proxy sheet {n} of {ts}'.format(n=i+2, ts=sheets_and_cardbacks))
-			gimp.progress_update(float(i+1)/float(sheets_and_cardbacks))
+			gimp.progress_init('Generating proxy sheet {n} of {ts}'.format(n=2*i+2, ts=sheets_and_cardbacks))
+			gimp.progress_update(float(2*i+1)/float(sheets_and_cardbacks))
 			__arrange_cards_into_sheet(cardbacks,
 				cardback_names,
 				sheet_width_px,
@@ -191,7 +193,7 @@ def __arrange_cards_into_sheet(card_images, card_names, sheet_width_px, sheet_he
 		pdb.gimp_edit_copy(card_image.active_layer)
 		selection = pdb.gimp_edit_paste(card_layer, True)
 		pdb.gimp_floating_sel_anchor(selection)
-		pdb.gimp_progress_pulse()
+		#pdb.gimp_progress_pulse()
 	
 	background_layer = pdb.gimp_layer_new(image, sheet_width_px, sheet_height_px, RGB_IMAGE, 'background', 100, NORMAL_MODE)
 	image.add_layer(background_layer, len(image.layers))

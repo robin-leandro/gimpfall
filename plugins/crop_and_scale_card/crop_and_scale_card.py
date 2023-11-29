@@ -10,7 +10,7 @@ from gimp_utils.gimp import crop_scale, card_setup, crop_inches_proportionally
 
 
 def crop_and_scale_card(image, _, target_width=744, target_height=1038):
-	crop_scale(image, target_width, target_height, 'fill')
+	crop_scale(image, target_width, target_height, 'crop')
 	#card_setup(image, target_width, target_height)
 	#crop_inches_proportionally(0.125, image, target_width, target_height)
 
@@ -26,7 +26,7 @@ register(
 	"RGB*, GRAY*",
 	[
 		(PF_INT, "width", "width", 744),
-		(PF_INT, "height", "height", 1038)
+		(PF_INT, "height", "height", 1039)
 	],
 	[],
 	crop_and_scale_card)

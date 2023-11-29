@@ -14,7 +14,7 @@ from proxy_settings import get_default_settings, settings_map_to_gimp_tuple, Pro
 def load_decklist_local(path, *args):
 	os.chdir(path)
 	settings = ProxySettings(args)
-	path_contents = os.listdir(path)
+	path_contents = sorted(os.listdir(path))
 	image_paths = map(lambda p: os.path.join(path, p) , path_contents)
 	image_names = map(lambda p: p.rpartition('.')[0], path_contents)
 	arrange_cards_into_sheets(image_paths, image_names, settings)

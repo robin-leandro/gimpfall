@@ -17,7 +17,7 @@ GIMP_FILETYPE_HANDLERS = {
 }
 
 def import_into_gimp(path, display=True):
-	image = pdb[GIMP_FILETYPE_HANDLERS[path.rpartition('.')[2]]](path, path)
+	image = pdb[GIMP_FILETYPE_HANDLERS[path.rpartition('.')[2].lower()]](path, path)
 
 	if display:
 		pdb.gimp_display_new(image)
@@ -33,7 +33,7 @@ def card_setup(image, final_width, final_height, grayscale, fix_eighth_inch_marg
 	return image
 	
 def unround_corners(image):
-	# i dont know why i need to multiply base_type by 2
+	# i dont know why i need to multiply image.base_type by 2
 	# i just know i do and it was a HUGE PITA to figure this out
 	corner_layer = pdb.gimp_layer_new(image, image.width, image.height, image.base_type*2, 'remove corners', 100, NORMAL_MODE)
 	image.add_layer(corner_layer, 2)
@@ -49,6 +49,10 @@ def crop_inches_proportionally(inches, image, card_width, card_height):
 	pdb.gimp_image_crop(image, image.width-proportional_width, image.height-proportional_height, proportional_width/2, proportional_height/2)
 
 def crop_scale(image, target_width, target_height, strategy='fill'):
+	if strategy == 'scale':
+		pdb.gimp_image_scale(image, target_width, target_height)
+		return image
+
 	initial_width = image.width
 	initial_height = image.height
 	temp_width = target_width
@@ -69,8 +73,8 @@ def crop_scale(image, target_width, target_height, strategy='fill'):
 
 	raise NameError('no strategy {s}'.format(s=strategy))
 
-def add_border(image, new_width, new_height, color, offset=0.5):
-	pdb.gimp_image_resize(image, new_width, new_height, int((new_width-image.width)*offset), int((new_height-image.height)*offset))
+def add_border(image, new_width, new_height, color, offset_x=0.5, offset_y=0.5):
+	pdb.gimp_image_resize(image, new_width, new_height, int((new_width-image.width)*offset_x), int((new_height-image.height)*offset_y))
 	# i dont know why i need to multiply base_type by 2
 	# i just know i do and it was a HUGE PITA to figure this out
 	card_layer = pdb.gimp_layer_new(image, new_width, new_height, image.base_type*2, 'border', 100, NORMAL_MODE)
@@ -86,6 +90,7 @@ def page_setup(sheet_width_px, sheet_height_px, card_width, card_height):
 	cards_per_row = int(math.floor(sheet_width_px / card_width))
 	cards_per_column = int(math.floor(sheet_height_px / card_height))
 	cards_per_sheet = cards_per_row * cards_per_column
+
 	horizontal_margin = int((sheet_width_px - cards_per_row * card_width) / 2)
 	vertical_margin = int((sheet_height_px - cards_per_column * card_height) / 2)
 	return cards_per_row, cards_per_column, cards_per_sheet, horizontal_margin, vertical_margin
@@ -135,16 +140,18 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 		card_width += gap_size_x
 		gap_size_y = (sheet_height_px - cards_per_column*card_height)/(cards_per_column+1)
 		card_height += gap_size_y
-		# each card has half the gap on both sides, and they add together to form the entire gap
-		# meaning we need to add a half gap before the first gap
-		horizontal_margin = gap_size_x/2
-		vertical_margin = gap_size_y/2
+
+		# when calculating gap sizes, a small error happens when dividing which results in the gaps being slightly smaller than usual
+		# which results in a slight skew to the left if left alone
+		# to maintain symmetry, we calculate the "leftover pixels" from the gaps calculation error and divide equally on both sides using the margins
+		horizontal_margin = (sheet_width_px - cards_per_row*card_width - gap_size_x) /2
+		vertical_margin = (sheet_height_px - cards_per_column*card_height - gap_size_y) /2
 		
 		fixed_images = set()
 		for image in card_images:
 			if image.ID in fixed_images:
 				continue
-			add_border(image, card_width, card_height, 'white', 0.5)
+			add_border(image, card_width, card_height, 'white', 1, 1)
 			fixed_images.add(image.ID)
 		
 		for cardback in cardbacks:
@@ -156,7 +163,7 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 			if scaled_x > card_width or scaled_y > card_height:
 				raise NameError('cardback_scale_percent too large to fix in sheet')
 			crop_scale(cardback, scaled_x, scaled_y, 'fill')
-			add_border(cardback, card_width, card_height, 'white', 0.5)
+			add_border(cardback, card_width, card_height, 'white', 1, 1)
 			fixed_images.add(cardback.ID)
 
 	sheets_and_cardbacks = total_sheets if cardback_path is None else total_sheets*2

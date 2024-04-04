@@ -9,14 +9,14 @@ def get_default_settings():
             'type': PF_FLOAT, 
             'name':'sheet_width_in', 
             'description':'Width in inches:', 
-            'value':18.5, 
+            'value':19, 
             'order':inc()
         },
         'sheet_height_in': {
             'type': PF_FLOAT, 
             'name': 'sheet_height_in', 
             'description':'Height in inches:', 
-            'value':12.5, 
+            'value':13, 
             'order':inc()
         },
         'card_width_cm': {
@@ -65,7 +65,7 @@ def get_default_settings():
             'type': PF_FLOAT,
             'name': 'cardback_scale_percent', 
             'description':'Percent to enlarge cardbacks as compared to front faces (evenly_space_cards must be true if <0):', 
-            'value':0, 
+            'value':1.5, 
             'order':inc()
         }
     }

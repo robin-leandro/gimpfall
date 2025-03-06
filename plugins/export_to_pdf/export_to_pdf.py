@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from gimpfu import register, main, pdb, PF_FILE
+from gimpfu import register, main, pdb, PF_DIRNAME, PF_STRING
 import os, sys
 
 plugin_path = os.path.abspath(sys.argv[0])
@@ -9,12 +9,13 @@ module_path = os.path.join(plugin_path.rpartition('gimpfall')[0],'gimpfall')
 sys.path.append(module_path)
 from gimp_utils.gimp import cleanup_temp_images
 
-default_filename = os.path.join(plugin_path.rpartition(os.path.join('/'))[0],'untitled.pdf')
+default_filename = 'untitled.pdf'
 
-def export_to_pdf(file_name=default_filename):
+def export_to_pdf(file_path, file_name=default_filename):
 	cleanup_temp_images()
 	count, image_ids = pdb.gimp_image_list()
-	pdb.file_pdf_save_multi(count, tuple(reversed(image_ids)), True, True, False, file_name, file_name)
+	name = os.path.join(file_path, file_name)
+	pdb.file_pdf_save_multi(count, tuple(reversed(image_ids)), True, True, False, name, name)
 
 register(		
 	"export_to_pdf",
@@ -26,7 +27,8 @@ register(
 	"<Toolbox>/gimpfall/Export to PDF",
 	"",
 	[
-		(PF_FILE, "file_name", "The name of the PDF file to generate", default_filename)
+		(PF_DIRNAME, "file_path", "The directory where the file will be saved", ''),
+		(PF_STRING, "file_name", "The name of the PDF file to generate", default_filename)
 	],
 	[],
 	export_to_pdf)

@@ -4,3 +4,4 @@
 
 missing options:
 	- choose how to handle double sided cards (different cards vs double-sided)
+	- optionize which crop_scale strategy to use for cardbacks

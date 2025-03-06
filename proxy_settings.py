@@ -1,4 +1,4 @@
-from gimpfu import PF_FLOAT, PF_FILE, PF_BOOL
+from gimpfu import PF_FLOAT, PF_FILE, PF_BOOL, PF_INT
 def get_default_settings():
     i = [-1]
     def inc():
@@ -26,7 +26,7 @@ def get_default_settings():
             'value': 6.3, 
             'order':inc()
         },
-        'card_height_px': {
+        'card_height_cm': {
             'type': PF_FLOAT, 
             'name': 'card_height_cm', 
             'description':'Height of each card in centimeters:', 
@@ -54,19 +54,19 @@ def get_default_settings():
             'value':False, 
             'order':inc()
         },
-        'evenly_space_cards': {
-            'type': PF_BOOL, 
-            'name': 'evenly_space_cards', 
-            'description':'Leave even spaces between cards?', 
-            'value':True, 
+        'horizontal_gap_px': {
+            'type': PF_INT,
+            'name': 'horizontal_gap_px', 
+            'description':'Space to leave between each card horizontally, given in pixels. -1 to automatically calculate', 
+            'value':-1, 
             'order':inc()
         },
-        'cardback_scale_percent': {
-            'type': PF_FLOAT,
-            'name': 'cardback_scale_percent', 
-            'description':'Percent to enlarge cardbacks as compared to front faces (evenly_space_cards must be true if <0):', 
-            'value':1.5, 
-            'order':inc()
+        'vertical_gap_px': {
+            'type': PF_INT,
+            'name': 'vertical_gap_px', 
+            'description': 'Space to leave between each card vertically, given in pixels. -1 to automatically calculate', 
+            'value': 50, 
+            'order': inc()
         }
     }
 

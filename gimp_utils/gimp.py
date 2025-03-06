@@ -27,7 +27,7 @@ def card_setup(image, final_width, final_height, grayscale, fix_eighth_inch_marg
 	unround_corners(image)
 	if fix_eighth_inch_margin:
 		crop_inches_proportionally(0.125, image, final_width, final_height)
-	crop_scale(image, final_width, final_height, 'crop')
+	crop_scale(image, final_width, final_height, 'scale')
 	if grayscale:
 		pdb.gimp_image_convert_grayscale(image)
 	return image
@@ -97,14 +97,12 @@ def page_setup(sheet_width_px, sheet_height_px, card_width, card_height):
 
 def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 	sheet_width_in, sheet_height_in, card_width_cm, card_height_cm, cardback_path,\
-		  greyscale, fix_eighth_in_margin, evenly_space_cards, cardback_scale_percent = proxy_settings.get_all()
+		  greyscale, fix_eighth_in_margin, horizontal_gap_px, vertical_gap_px = proxy_settings.get_all()
 	sheet_width_px, sheet_height_px = in_to_px(sheet_width_in), in_to_px(sheet_height_in)
 	card_width, card_height = cm_to_px(card_width_cm), cm_to_px(card_height_cm)
 
 	if card_width > sheet_width_px or card_height > sheet_height_px:
 		raise NameError('sheet with provided dimensions cannot fit any cards')
-	if cardback_scale_percent > 0 and evenly_space_cards is not True:
-		raise NameError('cannnot upscale cardbacks if evenly_space_cards = False')
 
 	# dont wanna be double importing duplicates
 	paths_dict = {}
@@ -129,24 +127,26 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 	if cardback_path is '':
 		cardback_path = None
 	if cardback_path is not None:
-		cardback_image = crop_scale(import_into_gimp(cardback_path, False), card_width, card_height)
+		cardback_image = crop_scale(import_into_gimp(cardback_path, False), card_width, card_height, 'crop')
 		for i in range(cards_per_sheet):
 			cardback_names.append('cardback')
 			cardbacks.append(cardback_image) 
 
-	if evenly_space_cards:
+	if horizontal_gap_px != 0 or vertical_gap_px != 0:
 		# just add a white border to each card
-		gap_size_x = (sheet_width_px - cards_per_row*card_width)/(cards_per_row+1)
-		card_width += gap_size_x
-		gap_size_y = (sheet_height_px - cards_per_column*card_height)/(cards_per_column+1)
-		card_height += gap_size_y
+		horizontal_gap_px = horizontal_gap_px if horizontal_gap_px >= 0 else (sheet_width_px - cards_per_row*card_width)/(cards_per_row+1)
+		card_width += horizontal_gap_px
+		#TODO: add a parameter for this value eg Use horizontal gap for vertical arrangement
+		vertical_gap_px = vertical_gap_px if vertical_gap_px >= 0 else  (sheet_height_px - cards_per_column*card_height)/(cards_per_column+1)
+		card_height += vertical_gap_px
 
-		# when calculating gap sizes, a small error happens when dividing which results in the gaps being slightly smaller than usual
-		# which results in a slight skew to the left if left alone
+		# when calculating gap sizes, a small rounding error happens which results in the gaps being slightly smaller than intended
+		# this would result in the sum of all cards + gaps being smaller than the total sheet size, causing a skew to the right
 		# to maintain symmetry, we calculate the "leftover pixels" from the gaps calculation error and divide equally on both sides using the margins
-		horizontal_margin = (sheet_width_px - cards_per_row*card_width - gap_size_x) /2
-		vertical_margin = (sheet_height_px - cards_per_column*card_height - gap_size_y) /2
+		horizontal_margin = (sheet_width_px - cards_per_row*card_width - horizontal_gap_px) /2
+		vertical_margin = (sheet_height_px - cards_per_column*card_height - vertical_gap_px) /2
 		
+		# a set so if an image id comes up twice we dont do extra work
 		fixed_images = set()
 		for image in card_images:
 			if image.ID in fixed_images:
@@ -158,11 +158,6 @@ def arrange_cards_into_sheets(card_paths, card_names, proxy_settings):
 			if cardback.ID in fixed_images:
 				continue
 
-			scaled_x = cardback.width + (cardback.width * cardback_scale_percent / 100)
-			scaled_y = cardback.height + (cardback.height * cardback_scale_percent / 100)
-			if scaled_x > card_width or scaled_y > card_height:
-				raise NameError('cardback_scale_percent too large to fix in sheet')
-			crop_scale(cardback, scaled_x, scaled_y, 'fill')
 			add_border(cardback, card_width, card_height, 'white', 1, 1)
 			fixed_images.add(cardback.ID)
 
